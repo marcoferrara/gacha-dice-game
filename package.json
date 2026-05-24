@@ -1,0 +1,34 @@
+{
+  "name": "gacha-dice-game",
+  "version": "1.0.0",
+  "description": "AIjò Dice Gacha - Sprint 1 core loop mechanics",
+  "main": "dist/DiceSimulator.js",
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "start:cli": "tsc && node dist/DiceSimulator.js",
+    "generate-assets": "tsc && node dist/AssetGenerator.js",
+    "mobile:sync": "npm run build && npx cap sync",
+    "mobile:open": "npx cap open android"
+  },
+  "keywords": [
+    "gacha",
+    "dice",
+    "sardinia",
+    "game",
+    "android"
+  ],
+  "author": "Marco Ferrara",
+  "license": "MIT",
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.0.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/core": "^8.3.4"
+  }
+}

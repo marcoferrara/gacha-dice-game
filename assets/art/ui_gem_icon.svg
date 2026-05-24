@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cristallo di Ossidiana di Monte Arci -->
+  <path d="M50 10 L82 42 L68 85 L32 85 L18 42 Z" fill="url(#obsidianGrad)" stroke="#1a1a24" stroke-width="2.5"/>
+  <!-- Faccette interne per effetto 3D cristallino -->
+  <path d="M50 10 L50 48 L82 42" fill="#353545" opacity="0.4"/>
+  <path d="M50 48 L68 85 L32 85 Z" fill="#12121a" opacity="0.3"/>
+  <path d="M50 10 L18 42 L50 48" fill="#4d4d61" opacity="0.2"/>
+  <path d="M18 42 L32 85 L50 48" fill="#1f1f2e" opacity="0.5"/>
+  <path d="M82 42 L68 85 L50 48" fill="#2d2d3d" opacity="0.6"/>
+  <!-- Bande di flusso grigie vulcaniche tipiche -->
+  <path d="M35 25 C45 28, 55 22, 65 25 M30 50 C45 55, 55 45, 70 50 M40 70 C48 72, 52 68, 60 70" fill="none" stroke="#888899" stroke-width="1.5" opacity="0.3"/>
+  <!-- Luce di riflesso speculare -->
+  <path d="M50 10 L82 42" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <defs>
+    <linearGradient id="obsidianGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a2a35"/>
+      <stop offset="60%" stop-color="#0a0a0f"/>
+      <stop offset="100%" stop-color="#020204"/>
+    </linearGradient>
+  </defs>
+</svg>

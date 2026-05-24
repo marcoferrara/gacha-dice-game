@@ -1,0 +1,12 @@
+<svg width="300" height="420" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo carta scuro -->
+  <rect x="3" y="3" width="94" height="134" rx="8" fill="#0d1117" stroke="#c8a76b" stroke-width="2"/>
+  <!-- Cornice interna elegante -->
+  <rect x="7" y="7" width="86" height="126" rx="6" fill="none" stroke="#fff4d4" stroke-width="0.8" opacity="0.5"/>
+  <!-- Angoli decorati stile orificeria sarda -->
+  <path d="M7 17 L17 7 M93 17 L83 7 M7 123 L17 133 M93 123 L83 133" stroke="#c8a76b" stroke-width="1.5"/>
+  <!-- Targa del nome in basso -->
+  <rect x="15" y="112" width="70" height="18" rx="3" fill="#5c441c" stroke="#c8a76b" stroke-width="1"/>
+  <!-- Gemma in alto rappresentante il grado -->
+  <polygon points="50,4 54,8 50,12 46,8" fill="#fff4d4" stroke="#c8a76b" stroke-width="0.8"/>
+</svg>

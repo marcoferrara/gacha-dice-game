@@ -1,0 +1,88 @@
+export type HeroClass = 'SHARDANA' | 'JANA' | 'GIGANTE' | 'ACCABADORA';
+export type HeroGrade = 'C' | 'R' | 'S' | 'SR';
+export type ElementType = 'OSSIDIANA' | 'ACQUA' | 'PIETRA' | 'VENTO';
+
+export interface Equipment {
+  id: string;
+  name: string;
+  type: 'WEAPON' | 'AMULET';
+  statBonus: {
+    hp?: number;
+    atk?: number;
+    def?: number;
+  };
+  icon: string;
+}
+
+export interface Hero {
+  id: string;
+  name: string;
+  heroClass: HeroClass;
+  grade: HeroGrade;
+  level: number;
+  maxHp: number;
+  currentHp: number;
+  attack: number;
+  defense: number;
+  criticalChance: number;
+  element?: ElementType;
+  
+  // Real-time battle parameters
+  skillName: string;
+  skillCastTime: number; // in seconds, time to cast
+  skillCooldown: number; // in seconds, cooldown time
+  skillTimer: number;    // tracking time to next cast in real-time loop
+  skillReady: boolean;
+
+  // Web and progression parameters
+  starRank?: number;
+  baseHp?: number;
+  baseAtk?: number;
+  baseDef?: number;
+  icon?: string;
+  desc?: string;
+  image?: string;
+
+  // Equipment parameters
+  equipWeapon?: Equipment;
+  equipAmulet?: Equipment;
+}
+
+export type EnemyType = 'COMMON' | 'ELITE' | 'BOSS';
+
+export interface Enemy {
+  name: string;
+  type: EnemyType;
+  maxHp: number;
+  currentHp: number;
+  attack: number;
+  defense: number;
+  element?: ElementType;
+  skills: {
+    name: string;
+    damage: number;
+    cooldown: number;
+    timer: number;
+  };
+}
+
+export type CellType = 'COINS' | 'GEMS' | 'TEMPLE' | 'TRAP' | 'COMMON_ENEMY' | 'ELITE_ENEMY' | 'BOSS' | 'MERCHANT' | 'DECISION';
+
+export interface Cell {
+  id: number;
+  type: CellType;
+  name: string;
+  value: number; // Monete, Gemme, o percentuale malus o valore acquisti
+}
+
+export interface GameState {
+  currentLevel: number;
+  playerPosition: number; // Indice della casella da 0 a MaxCaselle - 1
+  coins: number;
+  gems: number;
+  team: Hero[]; // Squadra attiva di massimo 5 eroi
+  inventory?: Hero[]; // Inventario riserve
+  equipmentInventory?: Equipment[]; // Inventario equipaggiamento
+  language?: 'en' | 'it';
+  unlockedCollection?: string[]; // Nomi o ID degli eroi sbloccati nel Codex
+}

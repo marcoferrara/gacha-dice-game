@@ -1,0 +1,39 @@
+<svg width="300" height="420" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo Carta S -->
+  <rect x="3" y="3" width="94" height="134" rx="8" fill="url(#bgGradMedusa)" stroke="#805ad5" stroke-width="2"/>
+  
+  <!-- Cerchi magici ed evocativi violacei -->
+  <circle cx="50" cy="48" r="22" fill="none" stroke="#d6bcfa" stroke-width="0.5" stroke-dasharray="1 3" opacity="0.4"/>
+  
+  <!-- Silhouette Jana (Fata) -->
+  <!-- Velo tradizionale sardo in oro trasparente sulla testa -->
+  <path d="M50 25 C42 25, 36 34, 38 48 C40 62, 50 68, 50 68 C50 68, 60 62, 62 48 C64 34, 58 25, 50 25 Z" fill="#e0c79b" opacity="0.3"/>
+  <path d="M50 28 C46 28, 43 32, 43 38 C43 44, 46 47, 50 47 C54 47, 57 44, 57 38 C57 32, 54 28, 50 28 Z" fill="#b794f4"/>
+  
+  <!-- Abito tradizionale in broccato rosso violaceo e filigrana -->
+  <path d="M32 75 L68 75 L60 48 L40 48 Z" fill="#6b1d5c" stroke="#805ad5" stroke-width="1.2"/>
+  <!-- Corpetto ricamato d'oro -->
+  <path d="M43 48 L57 48 L53 62 L47 62 Z" fill="#b794f4" stroke="#d6bcfa" stroke-width="0.8"/>
+  
+  <!-- Stardust magico viola/fucsia attorno alle mani -->
+  <circle cx="32" cy="70" r="1.5" fill="#fbb6ce"/>
+  <circle cx="28" cy="65" r="1" fill="#fff"/>
+  <circle cx="36" cy="60" r="1.2" fill="#d6bcfa"/>
+  <circle cx="68" cy="70" r="1.5" fill="#fbb6ce"/>
+  <circle cx="72" cy="65" r="1" fill="#fff"/>
+  <circle cx="64" cy="60" r="1.2" fill="#d6bcfa"/>
+  
+  <!-- Cornice S -->
+  <rect x="7" y="7" width="86" height="126" rx="6" fill="none" stroke="#d6bcfa" stroke-width="0.8" opacity="0.6"/>
+  <!-- Targa del Nome -->
+  <rect x="15" y="112" width="70" height="18" rx="3" fill="#322659" stroke="#805ad5" stroke-width="1"/>
+  <text x="50" y="122" fill="#d6bcfa" font-family="serif" font-size="7.5" font-weight="bold" text-anchor="middle" letter-spacing="0.5">JANA MEDUSA (S)</text>
+  <text x="50" y="128" fill="#b794f4" font-family="sans-serif" font-size="5" text-anchor="middle">JANA INCANTATRICE</text>
+
+  <defs>
+    <linearGradient id="bgGradMedusa" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a0f3d"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+  </defs>
+</svg>

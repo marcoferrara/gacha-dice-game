@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIjò Dice Gacha — Mobile Emulator</title>
+  <!-- Google Fonts: Inter e Cormorant Garamond -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- CONTENITORE PRINCIPALE: EMULATORE SMARTPHONE -->
+  <div class="phone-wrapper">
+    <div class="phone-case">
+      <!-- Barra di Stato Superiore -->
+      <div class="phone-status-bar">
+        <span class="status-time" id="real-time-clock">18:50</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.58 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M17 5H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-1 12H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V7h8v2z" fill="currentColor"/></svg>
+        </div>
+      </div>
+
+      <!-- INTESTAZIONE DI GIOCO (Valute ed Info Livello) -->
+      <header class="game-header">
+        <div class="level-badge-container" style="display: flex; align-items: center; gap: 0.4rem;">
+          <div class="level-badge"><span id="lbl-header-level">LIV.</span> <span id="ui-current-level">1</span></div>
+          <button class="btn-settings" id="btn-settings" title="Reset Salvataggio" style="background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1rem; display: flex; align-items: center; transition: transform 0.2s;">⚙️</button>
+          <button class="btn-settings" id="btn-toggle-audio" title="Attiva Audio" style="background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1.05rem; display: flex; align-items: center; transition: transform 0.2s; margin-left: 2px;">🔇</button>
+          <button class="btn-settings" id="btn-toggle-frame" title="Schermo Intero" style="background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1.05rem; display: flex; align-items: center; transition: transform 0.2s; margin-left: 2px;">🖥️</button>
+          <button class="btn-settings" id="btn-toggle-lang" title="Switch Language" style="background: none; border: none; color: var(--gold); cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; transition: transform 0.2s; margin-left: 2px; font-weight: 600;">🇬🇧</button>
+        </div>
+        <div class="currencies">
+          <div class="currency-item">
+            <img src="assets/art/ui_coin_icon.svg" alt="Monete" class="curr-icon">
+            <span id="ui-coins">100</span>
+          </div>
+          <div class="currency-item">
+            <img src="assets/art/ui_gem_icon.svg" alt="Gemme" class="curr-icon">
+            <span id="ui-gems">10</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENUTI SCHERMATE DENTRO IL DISPLAY -->
+      <main class="game-display">
+
+        <!-- SCHERMATA 1: LA TAVOLA A SERPENTE (Attiva di default) -->
+        <section class="screen active" id="screen-board">
+          <!-- Titolo Scenario -->
+          <div class="scenario-banner">
+            <h2>Tappa 1: Nuraghe Losa</h2>
+            <p>Il sentiero dei Mamuthones selvaggi</p>
+          </div>
+
+          <!-- Mappa a Serpente con Caselle -->
+          <div class="serpentine-board-container" id="board-container">
+            <!-- Le caselle verranno generate dinamicamente qui in JS -->
+            
+            <!-- Pedina Giocatore Dorata Shardana -->
+            <div class="player-token" id="player-token">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="32" fill="#c8a76b" stroke="#fff4d4" stroke-width="2.5"/>
+                <!-- Elmo cornuto Shardana stilizzato -->
+                <path d="M50 35 C53 35, 56 38, 56 43 C56 48, 50 53, 50 53 C50 53, 44 48, 44 43 C44 38, 47 35, 50 35 Z" fill="#5c441c"/>
+                <path d="M47 36 C40 28, 38 21, 39 18 C40 20, 44 26, 48 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
+                <path d="M53 36 C60 28, 62 21, 61 18 C60 20, 56 26, 52 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="39" cy="17" r="2.5" fill="#fff4d4"/>
+                <circle cx="61" cy="17" r="2.5" fill="#fff4d4"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Zona Dado e Controlli -->
+          <div class="board-controls">
+            <div class="dice-area">
+              <button class="btn-dice" id="btn-roll-dice">
+                <img src="assets/art/ui_dice_roll_button.svg" alt="Lancia Dado" id="dice-img">
+              </button>
+              <div class="dice-result-badge" id="dice-result-badge">0</div>
+            </div>
+            <div class="game-console" id="game-console">
+              <p class="console-log text-gold">Lancia il dado d'oro per iniziare il cammino...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHERMATA 2: COMBAT SCREEN IN TEMPO REALE -->
+        <section class="screen" id="screen-combat">
+          <div class="combat-header">
+            <h3>SCONTRO IN TEMPO REALE</h3>
+            <div class="combat-timer" id="combat-timer">0.0s</div>
+          </div>
+
+          <!-- Nemico Area -->
+          <div class="enemy-area">
+            <div class="enemy-visual">
+              <div class="enemy-avatar" id="enemy-avatar">👹</div>
+              <h4 id="enemy-name">Mamuthone Antico</h4>
+              <div class="hp-bar-wrapper">
+                <div class="hp-bar" id="enemy-hp-bar" style="width: 100%;"></div>
+                <span class="hp-text" id="enemy-hp-text">800/800</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Versus Banner -->
+          <div class="vs-divider">VS</div>
+
+          <!-- Nostra Squadra Eroi (5 Slot in Combattimento) -->
+          <div class="combat-team-grid" id="combat-team-grid">
+            <!-- I 5 eroi con le loro barre HP e timer di ricarica delle abilità speciale verranno generati qui -->
+          </div>
+
+          <!-- Timeline dei colpi e delle abilità speciali -->
+          <div class="combat-live-logs" id="combat-live-logs">
+            <!-- Messaggi fluttuanti della battaglia in tempo reale -->
+          </div>
+        </section>
+
+        <!-- SCHERMATA 3: SCHERMO SQUADRA (Slot & Reorder) -->
+        <section class="screen" id="screen-team">
+          <div class="scenario-banner">
+            <h2>I tuoi Guerrieri Sardi</h2>
+            <p>Trascina o clicca gli eroi per ordinarli nella squadra attiva di 5</p>
+          </div>
+
+          <div class="team-slots-container">
+            <div class="slots-header">SQUADRA ATTIVA (5 SLOT)</div>
+            <div class="slots-grid" id="team-active-slots">
+              <!-- I 5 slot attivi degli eroi verranno posizionati qui -->
+            </div>
+          </div>
+
+          <div class="inventory-section">
+            <div class="slots-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+              <span>RISERVA / INVENTARIO EROI</span>
+              <button class="btn-reset-save" id="btn-reset-team-screen">Reset Gioco 🔄</button>
+            </div>
+            <div class="inventory-grid" id="team-inventory-grid">
+              <!-- Gli eroi in riserva per future evocazioni/scambi -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHERMATA 3: CODICE MITOLOGICO (CODEX) -->
+        <section class="screen" id="screen-codex">
+          <div class="scenario-banner">
+            <h2 id="codex-banner-title">Nuragic Codex</h2>
+            <p id="codex-banner-desc">Collect Sardinian heroes and unlock their mythological secrets</p>
+          </div>
+          
+          <div class="codex-container" style="flex: 1; overflow-y: auto; padding: 0.2rem 0.4rem; display: flex; flex-direction: column; gap: 0.8rem;">
+            <!-- Contatore Sblocchi -->
+            <div style="background: rgba(200, 167, 107, 0.04); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.4rem; font-size: 0.65rem; color: #fff; font-weight: 600; text-align: center; letter-spacing: 0.03em;">
+              <span id="lbl-codex-progress">UNLOCKED COLLECTION: 0 / 13</span>
+            </div>
+            
+            <!-- Griglia dei Personaggi nel Codex -->
+            <div class="codex-grid" id="codex-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; padding-bottom: 1rem;">
+              <!-- Generato dinamicamente in JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHERMATA 4: LA GROTTA DELLE EVOCAZIONI -->
+        <section class="screen" id="screen-gacha">
+          <div class="scenario-banner">
+            <h2>Tempio delle Evocazioni</h2>
+            <p>Spendi le gemme per risvegliare antichi guerrieri sardi</p>
+          </div>
+          
+          <div class="gacha-rates-banner">
+            <div class="rates-title">PROBABILITÀ DI EVOCAZIONE</div>
+            <div class="rates-grid">
+              <span class="rate-badge grade-c">C: 70%</span>
+              <span class="rate-badge grade-r">R: 20%</span>
+              <span class="rate-badge grade-s">S: 8%</span>
+              <span class="rate-badge grade-sr">SR: 2%</span>
+            </div>
+          </div>
+          
+          <div class="gacha-altar">
+            <div class="altar-glow-ring"></div>
+            <div class="altar-runes">𐌀𐌂𐌀𐌁𐌀𐌃𐌏𐌓𐌀 𐌔𐌇𐌀𐌓𐌃𐌀𐌽𐌀 𐌔𐌏𐌓𐌃𐌏 𐌔𐌉𐌋𐌄𐌽𐌕𐌄</div>
+            <div class="altar-center-orb">🔮</div>
+          </div>
+          
+          <div class="gacha-actions">
+            <button class="btn-gacha-pull" id="btn-gacha-single">
+              <span class="pull-lbl">Evoca Singola</span>
+              <span class="pull-cost"><img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 10</span>
+            </button>
+            <button class="btn-gacha-pull btn-multi" id="btn-gacha-multi">
+              <span class="pull-lbl">Multi-Evoca 10x</span>
+              <span class="pull-cost"><img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 90</span>
+            </button>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- NAVIGAZIONE SMARTPHONE IN BASSO -->
+      <nav class="phone-nav-bar">
+        <button class="nav-btn active" data-screen="screen-board">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-lbl" id="nav-lbl-board">Board</span>
+        </button>
+        <button class="nav-btn" data-screen="screen-team">
+          <span class="nav-icon">👥</span>
+          <span class="nav-lbl" id="nav-lbl-team">Team</span>
+        </button>
+        <button class="nav-btn" data-screen="screen-codex">
+          <span class="nav-icon">📖</span>
+          <span class="nav-lbl" id="nav-lbl-codex">Codex</span>
+        </button>
+        <button class="nav-btn" data-screen="screen-gacha">
+          <span class="nav-icon">🔮</span>
+          <span class="nav-lbl" id="nav-lbl-gacha">Summon</span>
+        </button>
+      </nav>
+
+      <!-- Canvas per Effetti Particellari 2D -->
+      <canvas id="particle-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- NOTIFICHE DI GIOCO POPUP -->
+  <div class="popup-overlay" id="popup-event">
+    <div class="popup-box">
+      <h2 id="popup-title">Evento Casella</h2>
+      <div class="popup-icon" id="popup-icon">🪙</div>
+      <p id="popup-desc">Hai trovato un antico tesoro dei Shardana!</p>
+      <button class="btn-popup-close" id="btn-popup-close">AIjò! ➔</button>
+    </div>
+  </div>
+
+  <!-- POPUP DI ANIMAZIONE GACHA EVOCAZIONE -->
+  <div class="popup-overlay" id="popup-gacha-reveal" style="z-index: 150;">
+    <div class="gacha-portal-container">
+      <!-- Portale runico animato che gira -->
+      <div class="gacha-portal-vortex" id="portal-vortex"></div>
+      <div class="gacha-portal-flash" id="portal-flash"></div>
+      
+      <!-- Contenitore di svelamento delle carte -->
+      <div class="gacha-reveal-container" id="gacha-reveal-container" style="display: none;">
+        <h2 class="reveal-title" id="gacha-reveal-title">Eroi Evocati!</h2>
+        
+        <!-- Carte svelate dinamicamente -->
+        <div class="gacha-cards-display" id="gacha-cards-display"></div>
+        
+        <button class="btn-popup-close" id="btn-gacha-confirm" style="margin-top: 1.2rem;">AIjò! ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP DI ISPEZIONE EROE (Level Up e Fusione) -->
+  <div class="popup-overlay" id="popup-hero-inspect" style="z-index: 120;">
+    <div class="popup-box hero-inspect-box">
+      <button class="btn-close-inspect" id="btn-close-inspect">✕</button>
+      <h2 id="inspect-hero-name" class="inspect-title">Amsicora</h2>
+      <div class="inspect-rarity-stars" id="inspect-rarity-stars">⭐⭐⭐⭐⭐</div>
+      
+      <div class="inspect-hero-avatar-wrap">
+        <div class="inspect-hero-avatar" id="inspect-hero-avatar">⚔️</div>
+      </div>
+      
+      <div class="inspect-stats-grid">
+        <div class="stat-box">
+          <span class="stat-lbl">HP MAX</span>
+          <span class="stat-val" id="inspect-stat-hp">180</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">ATK</span>
+          <span class="stat-val" id="inspect-stat-atk">38</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">DEF</span>
+          <span class="stat-val" id="inspect-stat-def">8</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">CD</span>
+          <span class="stat-val" id="inspect-stat-cd">3.5s</span>
+        </div>
+      </div>
+      
+      <div class="inspect-skill-section">
+        <div class="skill-name-lbl" id="inspect-skill-name">Furia del Bronzo</div>
+        <div class="skill-desc-lbl" id="inspect-skill-desc">Scatena una carica furiosa che infligge il 350% dell'attacco al nemico.</div>
+      </div>
+
+      <!-- Equipaggiamento (Bronzetti) -->
+      <div class="inspect-equip-section" style="margin-top: 0.8rem; margin-bottom: 0.8rem; text-align: left;">
+        <div class="skill-name-lbl" style="font-size: 0.65rem; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 0.4rem;">BRONZETTI EQUIPAGGIATI</div>
+        <div class="equip-slots-wrap" style="display: flex; gap: 0.8rem;">
+          <div class="equip-slot-item" id="slot-weapon" style="flex: 1; height: 42px; background: rgba(255,255,255,0.03); border: 1.5px dashed var(--gold-border); border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: border-color 0.2s;">
+            <span style="font-size: 1.1rem; opacity: 0.4;">⚔️</span>
+            <span style="font-size: 0.58rem; color: var(--text-muted); font-weight: 600;">Arma vuota</span>
+          </div>
+          <div class="equip-slot-item" id="slot-amulet" style="flex: 1; height: 42px; background: rgba(255,255,255,0.03); border: 1.5px dashed var(--gold-border); border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: border-color 0.2s;">
+            <span style="font-size: 1.1rem; opacity: 0.4;">🔮</span>
+            <span style="font-size: 0.58rem; color: var(--text-muted); font-weight: 600;">Amuleto vuoto</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="inspect-upgrade-actions">
+        <button class="btn-upgrade-action" id="btn-hero-level-up">
+          <span class="act-lbl">POTENZIA (LIV. <span id="inspect-hero-level">1</span>)</span>
+          <span class="act-sub" id="lbl-level-up-cost">🪙 200 Gold</span>
+        </button>
+        <button class="btn-upgrade-action" id="btn-hero-fuse">
+          <span class="act-lbl">FONDI DUPLICATO</span>
+          <span class="act-sub" id="lbl-fuse-status">Nessun Duplicato</span>
+        </button>
+      </div>
+      
+      <div class="inspect-upgrade-actions" style="margin-top: 0.6rem;">
+        <button class="btn-upgrade-action" id="btn-hero-sell" style="border-color: rgba(230, 57, 70, 0.4); background: rgba(230, 57, 70, 0.05); flex: 1;">
+          <span class="act-lbl" style="color: #E63946;">VENDI / CONGEDA EROE</span>
+          <span class="act-sub" id="lbl-sell-status" style="color: #E63946;">+50 Gold</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP DI SELEZIONE EQUIPAGGIAMENTO -->
+  <div class="popup-overlay" id="popup-equip-select" style="z-index: 130;">
+    <div class="popup-box select-equip-box" style="width: 300px; padding: 1.4rem;">
+      <button class="btn-close-inspect" id="btn-close-equip-select">✕</button>
+      <h2 class="inspect-title" style="font-size: 1.3rem; margin-bottom: 0.8rem;" id="equip-select-title">Seleziona Bronzetto</h2>
+      <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.8rem;">Scegli un equipaggiamento dall'inventario da assegnare all'eroe</p>
+      
+      <div class="equip-list-grid" id="equip-list-grid" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 180px; overflow-y: auto; margin-bottom: 1rem;">
+        <!-- Lista di bronzetti disponibili in inventario generata dinamicamente -->
+      </div>
+      
+      <button class="btn-reset-save" id="btn-unequip" style="width: 100%; height: 32px; font-size: 0.72rem; text-transform: uppercase;">Rimuovi Equipaggiamento ❌</button>
+    </div>
+  </div>
+
+  <!-- POPUP MERCHANT BOTTEGA SARDA -->
+  <div class="popup-overlay" id="popup-merchant" style="z-index: 110;">
+    <div class="popup-box merchant-box" style="width: 310px; padding: 1.5rem; border-color: #52B788;">
+      <h2>Bottega del Shardana</h2>
+      <div class="popup-icon" style="font-size: 2.4rem; margin: 0.4rem 0;">🛒</div>
+      <p style="font-size: 0.75rem; margin-bottom: 1rem;">"Benvenuto viaggiatore! Scambia le tue monete d'oro shardana con merci preziose per le tue battaglie."</p>
+      
+      <div class="merchant-items-container" id="merchant-items" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem;">
+        <!-- 3 articoli casuali generati dinamicamente in JS -->
+      </div>
+      
+      <button class="btn-popup-close" id="btn-merchant-close" style="background: #52B788; color: #fff;">Congedati ➔</button>
+    </div>
+  </div>
+
+  <!-- POPUP SCELTE DEL DESTINO -->
+  <div class="popup-overlay" id="popup-decision" style="z-index: 110;">
+    <div class="popup-box decision-box" style="width: 310px; padding: 1.5rem; border-color: #805ad5;">
+      <h2>Scelta del Destino</h2>
+      <div class="popup-icon" style="font-size: 2.4rem; margin: 0.4rem 0;">🔮</div>
+      <p id="decision-description" style="font-size: 0.75rem; margin-bottom: 1.2rem;">Ti trovi di fronte ad un antico Nuraghe parzialmente crollato. Senti rumori ed un bagliore provenire dall'interno.</p>
+      
+      <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem;">
+        <button class="btn-upgrade-action" id="btn-choice-risky" style="width: 100%; border-color: #E63946; background: rgba(230, 57, 70, 0.05); cursor: pointer;">
+          <span class="act-lbl" style="color: #E63946;">ESPLORA CON RISCHIO</span>
+          <span class="act-sub" style="font-size: 0.52rem; color: var(--text-muted);">50% Gemme d'Ossidiana | 50% Frana Trap</span>
+        </button>
+        <button class="btn-upgrade-action" id="btn-choice-safe" style="width: 100%; border-color: #52B788; background: rgba(82, 183, 136, 0.05); cursor: pointer;">
+          <span class="act-lbl" style="color: #52B788;">SENTIERO SICURO</span>
+          <span class="act-sub" style="font-size: 0.52rem; color: var(--text-muted);">Ricevi 150 Monete in sicurezza</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP DI DETTAGLIO LORE CODEX -->
+  <div class="popup-overlay" id="popup-codex-lore" style="z-index: 140;">
+    <div class="popup-box codex-lore-box" style="width: 320px; padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
+      <button class="btn-close-inspect" id="btn-close-codex-lore">✕</button>
+      <h2 id="lore-hero-name" class="inspect-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; color: var(--gold); margin-bottom: 0.1rem;">Amsicora</h2>
+      <div id="lore-hero-title" style="font-size: 0.65rem; color: var(--gold); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.8rem;">SHARDANA LEGEND</div>
+      
+      <div class="inspect-hero-avatar-wrap" style="margin-bottom: 0.8rem;">
+        <div class="inspect-hero-avatar" id="lore-hero-avatar">⚔️</div>
+      </div>
+      
+      <div id="lore-hero-history" style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.01); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.6rem; max-height: 180px; overflow-y: auto; margin-bottom: 1.2rem;">
+        Lore detail goes here...
+      </div>
+      
+      <button class="btn-popup-close" id="btn-close-lore-confirm" style="width: 100%;">Close ➔</button>
+    </div>
+  </div>
+
+  <!-- Caricamento dello Script di Controllo -->
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

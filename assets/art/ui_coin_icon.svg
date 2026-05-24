@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo bagliore -->
+  <circle cx="50" cy="50" r="45" fill="radial-gradient(circle, #c8a76b 20%, transparent 80%)" opacity="0.15"/>
+  <!-- Corpo moneta -->
+  <circle cx="50" cy="50" r="38" fill="url(#goldGrad)" stroke="#8e6f3e" stroke-width="2.5"/>
+  <!-- Anello interno filigrana -->
+  <circle cx="50" cy="50" r="28" fill="none" stroke="#e0c79b" stroke-width="1.5" stroke-dasharray="2 2"/>
+  <!-- Simbolo Sole Shardana centrale -->
+  <circle cx="50" cy="50" r="10" fill="#8e6f3e"/>
+  <path d="M50 15 L50 25 M50 75 L50 85 M15 50 L25 50 M75 50 L85 50 M25 25 L32 32 M68 68 L75 75 M25 75 L32 68 M68 25 L75 32" stroke="#e0c79b" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Riflesso lucido -->
+  <path d="M22 28 C35 15, 65 15, 78 28" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5e0b3"/>
+      <stop offset="50%" stop-color="#c8a76b"/>
+      <stop offset="100%" stop-color="#8e6f3e"/>
+    </linearGradient>
+  </defs>
+</svg>
