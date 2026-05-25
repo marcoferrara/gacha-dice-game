@@ -97,6 +97,7 @@
           <div class="enemy-area">
             <div class="enemy-visual">
               <div class="enemy-avatar" id="enemy-avatar">👹</div>
+              <div id="enemy-type-badge" class="enemy-type-badge common">COMUNE</div>
               <h4 id="enemy-name">Mamuthone Antico</h4>
               <div class="hp-bar-wrapper">
                 <div class="hp-bar" id="enemy-hp-bar" style="width: 100%;"></div>
@@ -182,9 +183,35 @@
           </div>
           
           <div class="gacha-altar">
-            <div class="altar-glow-ring"></div>
-            <div class="altar-runes">𐌀𐌂𐌀𐌁𐌀𐌃𐌏𐌓𐌀 𐌔𐌇𐌀𐌓𐌃𐌀𐌽𐌀 𐌔𐌏𐌓𐌃𐌏 𐌔𐌉𐌋𐌄𐌽𐌕𐌄</div>
-            <div class="altar-center-orb">🔮</div>
+            <!-- Stelle di sfondo -->
+            <div class="altar-stars"></div>
+
+            <!-- 8 Raggi energetici -->
+            <div class="altar-rays">
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+              <div class="altar-ray"></div>
+            </div>
+
+            <!-- 3 anelli concentrici -->
+            <div class="altar-ring altar-ring-outer"></div>
+            <div class="altar-ring altar-ring-mid"></div>
+            <div class="altar-ring altar-ring-inner"></div>
+
+            <!-- Testo runico orbitante -->
+            <div class="altar-runes">𐌀𐌂𐌀𐌁𐌀𐌃𐌏𐌓𐌀 · 𐌔𐌇𐌀𐌓𐌃𐌀𐌽𐌀 · 𐌔𐌏𐌓𐌃𐌏 · 𐌔𐌉𐌋𐌄𐌽𐌕𐌄</div>
+
+            <!-- Orb CSS obsidiana (no emoji) -->
+            <div class="altar-center-orb">
+              <div class="altar-orb-core"></div>
+              <div class="altar-orb-shine"></div>
+              <div class="altar-orb-halo"></div>
+            </div>
           </div>
           
           <div class="gacha-actions">
@@ -239,8 +266,10 @@
   <!-- POPUP DI ANIMAZIONE GACHA EVOCAZIONE -->
   <div class="popup-overlay" id="popup-gacha-reveal" style="z-index: 150;">
     <div class="gacha-portal-container">
-      <!-- Portale runico animato che gira -->
+      <!-- Portale runico animato — 3 anelli -->
       <div class="gacha-portal-vortex" id="portal-vortex"></div>
+      <div class="gacha-portal-vortex-2" id="portal-vortex-2"></div>
+      <div class="gacha-portal-vortex-3" id="portal-vortex-3"></div>
       <div class="gacha-portal-flash" id="portal-flash"></div>
       
       <!-- Contenitore di svelamento delle carte -->

@@ -46,6 +46,9 @@ export interface Hero {
   // Equipment parameters
   equipWeapon?: Equipment;
   equipAmulet?: Equipment;
+
+  // Temporary combat buff (reset each fight — used by GIGANTE shield skill)
+  tempCombatDef?: number;
 }
 
 export type EnemyType = 'COMMON' | 'ELITE' | 'BOSS';
@@ -63,7 +66,7 @@ export interface Enemy {
     damage: number;
     cooldown: number;
     timer: number;
-  };
+  }[];
 }
 
 export type CellType = 'COINS' | 'GEMS' | 'TEMPLE' | 'TRAP' | 'COMMON_ENEMY' | 'ELITE_ENEMY' | 'BOSS' | 'MERCHANT' | 'DECISION';

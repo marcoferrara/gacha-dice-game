@@ -1,51 +1,17 @@
 import { BoardManager } from './BoardManager';
 import { CombatEngine } from './CombatEngine';
 import { Hero, Cell, GameState, HeroClass, HeroGrade, ElementType, Equipment, CellType, EnemyType } from './types';
+import { AudioSynth } from './AudioSynth';
+import { HEROES, HEROES_BY_NAME, HeroTemplate, HeroEntry, Translation } from './data/heroes';
 
 // ─── TEMPLATE E COSTANTI ───
 
-interface HeroTemplate {
-  name: string;
-  heroClass: HeroClass;
-  grade: HeroGrade;
-  maxHp: number;
-  attack: number;
-  defense: number;
-  skillCooldown: number;
-  icon: string;
-  skillName: string;
-  desc: string;
-  element: ElementType;
-  image?: string;
-}
-
-const HERO_TEMPLATES: Record<string, HeroTemplate> = {
-  // C Grade (Comuni - 70% rate)
-  SHARDANA_C: { name: 'Josto', heroClass: 'SHARDANA', grade: 'C', maxHp: 100, attack: 20, defense: 5, skillCooldown: 3.8, icon: '🏹', skillName: 'Fendente del Cacciatore', desc: 'Guerriero Shardana abile con l\'arco, colpisce rapidamente a distanza.', element: 'VENTO', image: 'josto.png' },
-  ACCABADORA_C: { name: 'Caddozzo', heroClass: 'ACCABADORA', grade: 'C', maxHp: 90, attack: 18, defense: 4, skillCooldown: 3.2, icon: '🔪', skillName: 'Taglio Rapido', desc: 'Apprendista del rito del trapasso, sferra colpi fulminei alle spalle.', element: 'ACQUA', image: 'caddozzo.png' },
-  GIGANTE_C: { name: 'Bruncu', heroClass: 'GIGANTE', grade: 'C', maxHp: 200, attack: 16, defense: 8, skillCooldown: 5.5, icon: '🧱', skillName: 'Muro di Rupi', desc: 'Guardia dei vecchi nuraghi, erige barriere di pietra protettiva.', element: 'PIETRA', image: 'bruncu.png' },
-  JANA_C: { name: 'Mamuthoneddu', heroClass: 'JANA', grade: 'C', maxHp: 95, attack: 21, defense: 3, skillCooldown: 4.2, icon: '🎭', skillName: 'Squillo di Campanacci', desc: 'Spirito mascherato minore, disorienta i nemici col rumore dei campanacci.', element: 'VENTO', image: 'mamuthoneddu.png' },
-
-  // R Grade (Rari - 20% rate)
-  GIGANTE_R: { name: 'Orthobene', heroClass: 'GIGANTE', grade: 'R', maxHp: 250, attack: 22, defense: 12, skillCooldown: 5.0, icon: '🗿', skillName: 'Scudo Concentrico', desc: 'Colosso basaltico semovente, focalizza l\'aggro e aumenta la difesa del team.', element: 'PIETRA', image: 'orthobene.png' },
-  SHARDANA_R: { name: 'Torico', heroClass: 'SHARDANA', grade: 'R', maxHp: 160, attack: 25, defense: 9, skillCooldown: 3.6, icon: '🛡️', skillName: 'Carica del Toro', desc: 'Guerriero d\'élite con corna di bronzo, travolge le prime linee nemiche.', element: 'OSSIDIANA', image: 'torico.png' },
-  JANA_R: { name: 'Vento di Janas', heroClass: 'JANA', grade: 'R', maxHp: 110, attack: 26, defense: 5, skillCooldown: 4.1, icon: '🌬️', skillName: 'Brezza di Sedini', desc: 'Fata delle grotte che manipola le correnti curative e rinfrescanti.', element: 'VENTO', image: 'vento_di_janas.png' },
-
-  // S Grade (Speciali - 8% rate)
-  JANA_S: { name: 'Jana Medusa', heroClass: 'JANA', grade: 'S', maxHp: 120, attack: 28, defense: 4, skillCooldown: 4.0, icon: '✨', skillName: 'Soffio di Domus', desc: 'Fata tessitrice di filigrana magica, lancia potenti incantesimi di cura del team.', element: 'ACQUA', image: 'jana_medusa.png' },
-  ACCABADORA_S: { name: 'Eleonora', heroClass: 'ACCABADORA', grade: 'S', maxHp: 130, attack: 34, defense: 5, skillCooldown: 3.0, icon: '💀', skillName: 'Colpo di Grazia', desc: 'Sacerdotessa dell\'ossidiana, giustizia i nemici feriti infliggendo danni fatali.', element: 'OSSIDIANA', image: 'eleonora.png' },
-  SHARDANA_S: { name: 'Mariano', heroClass: 'SHARDANA', grade: 'S', maxHp: 140, attack: 30, defense: 7, skillCooldown: 3.5, icon: '📜', skillName: 'Carta de Logu', desc: 'Giudice legislatore sardo, ordina attacchi coordinati aumentando l\'efficacia.', element: 'PIETRA', image: 'mariano.png' },
-
-  // SR Grade (Super Rari - 2% rate)
-  SHARDANA_SR: { name: 'Amsicora', heroClass: 'SHARDANA', grade: 'SR', maxHp: 180, attack: 38, defense: 8, skillCooldown: 3.5, icon: '⚔️', skillName: 'Furia del Bronzo', desc: 'Leggendario condottiero sardo, scatena colpi fulminei ad altissimo danno critico.', element: 'OSSIDIANA', image: 'amsicora.png' },
-  GIGANTE_SR: { name: 'Gigante Prama', heroClass: 'GIGANTE', grade: 'SR', maxHp: 320, attack: 28, defense: 15, skillCooldown: 4.8, icon: '🏛️', skillName: 'Pugno Ancestrale', desc: 'Colosso basaltico millenario dagli occhi a cerchio, incassa ingenti danni.', element: 'PIETRA', image: 'gigante_prama.png' },
-  ACCABADORA_SR: { name: 'Liba', heroClass: 'ACCABADORA', grade: 'SR', maxHp: 150, attack: 40, defense: 6, skillCooldown: 2.8, icon: '🪵', skillName: 'Mazzuolo del Destino', desc: 'L\'Accabadora Suprema, esegue istantaneamente i nemici sotto il 30% di salute.', element: 'VENTO', image: 'liba.png' }
-};
-
-interface Translation {
-  it: string;
-  en: string;
-}
+// Hero templates accessed via HEROES record from data/heroes.ts
+// e.g. HEROES.SHARDANA_SR.template, HEROES_BY_NAME['Amsicora'].localized
+// Convenience alias for template-only lookups used in gacha/codex
+const HERO_TEMPLATES: Record<string, HeroTemplate> = Object.fromEntries(
+  Object.entries(HEROES).map(([k, v]) => [k, v.template])
+);
 
 const SCENARIOS_LOCALIZED: { id: number; name: Translation; desc: Translation }[] = [
   { id: 1, name: { it: "Tappa 1: Nuraghe Losa", en: "Stage 1: Nuraghe Losa" }, desc: { it: "Il sentiero dei Mamuthones selvaggi", en: "The wild Mamuthones trail" } },
@@ -132,199 +98,6 @@ const LOCALIZATION_DICTIONARY: Record<string, Translation> = {
   'btn-choice-safe-sub': { en: "Receive 150 Coins safely", it: "Ricevi 150 Monete in sicurezza" }
 };
 
-interface HeroLore {
-  title: Translation;
-  history: Translation;
-}
-
-const HERO_LORE_DATABASE: Record<string, HeroLore> = {
-  'Josto': {
-    title: {
-      en: "Son of Amsicora & Shardana Patriot",
-      it: "Figlio di Amsicora & Patriota Shardana"
-    },
-    history: {
-      en: "Josto was the brave son of the legendary leader Amsicora. During the Sardinian-Carthaginian rebellion against Roman rule in 215 BC, he commanded the rebel forces during his father's absence. Despite his tragic end in the Battle of Decimomannu, his youthful courage and sacrifice remain a powerful symbol of Sardinian resistance and fight for freedom.",
-      it: "Josto era il valoroso figlio del leggendario condottiero Amsicora. Durante la ribellione sardo-cartaginese contro il dominio romano nel 215 a.C., comandò le forze ribelli in assenza del padre. Nonostante la sua tragica fine nella battaglia di Decimomannu, il suo coraggio giovanile e il suo sacrificio rimangono un potente simbolo della resistenza sarda per la libertà."
-    }
-  },
-  'Caddozzo': {
-    title: {
-      en: "Novice of the Trappas & Obsidian Shadow",
-      it: "Novizio del Trapasso & Ombra d'Ossidiana"
-    },
-    history: {
-      en: "An apprentice under the grim Accabadora, Caddozzo is a shadow lurking in the dark alleys of ancient villages. Equipped with daggers of black Mount Arci obsidian, he performs silent tasks, learning the delicate boundary between life and death under the ancient traditions of Sardinia.",
-      it: "Apprendista sotto la guida della severa Accabadora, Caddozzo è un'ombra che si aggira nei vicoli bui degli antichi villaggi. Equipaggiato con pugnali di ossidiana nera del Monte Arci, esegue compiti silenziosi, apprendendo il delicato confine tra la vita e la morte secondo le antiche tradizioni sarde."
-    }
-  },
-  'Bruncu': {
-    title: {
-      en: "Basalt Sentry of the Giants",
-      it: "Sentinella Basaltica dei Giganti"
-    },
-    history: {
-      en: "A robust guardian of stone, Bruncu is a giant born from the basalt of ancient nuraghi. Standing like an unyielding rock, he is the first shield of the team, using protective stones to shield his allies from enemy onslaughts, embodying the prehistoric stability of Sardinian architecture.",
-      it: "Un robusto guardiano di pietra, Bruncu è un gigante nato dal basalto degli antichi nuraghi. Ritto come una roccia incrollabile, è il primo scudo del gruppo, utilizzando pietre protettive per proteggere i compagni dagli assalti nemici, incarnando la stabilità preistorica dell'architettura sarda."
-    }
-  },
-  'Mamuthoneddu': {
-    title: {
-      en: "Minor Spirit of the Mask",
-      it: "Spirito Minore della Maschera"
-    },
-    history: {
-      en: "A mischievous spirit dressed in black sheepskins and dark wooden masks, Mamuthoneddu is a playful yet eerie representation of the ancient Mamuthones. With his heavy bronze bells (campanacci), he creates rhythmic confusion, chasing away winter spirits and disorienting battle foes.",
-      it: "Uno spirito burlone vestito di pelli di pecora nera e maschere di legno scuro, Mamuthoneddu è una rappresentazione giocosa ma inquietante degli antichi Mamuthones. Con i suoi pesanti campanacci di bronzo, crea una ritmica confusione, scacciando gli spiriti dell'inverno e disorientando i nemici in battaglia."
-    }
-  },
-  'Orthobene': {
-    title: {
-      en: "Colossus of the Silent Peak",
-      it: "Colosso della Vetta Silente"
-    },
-    history: {
-      en: "Orthobene is a colossal basalt golem named after the holy peak of Nuoro. Formed by primeval geological activity, he focuses the aggro of opponents, fortifying his body and drawing strength from the deep roots of Sardinian soil. He stands as a monumental guardian against foreign invaders.",
-      it: "Orthobene è un colossale golem basaltico che prende il nome dalla vetta sacra di Nuoro. Formatosi attraverso un'attività geologica primordiale, concentra su di sé l'ira degli avversari, fortificando il proprio corpo e traendo forza dalle profonde radici del suolo sardo. Si erge a difesa contro ogni invasore esterno."
-    }
-  },
-  'Torico': {
-    title: {
-      en: "Bronze Bull Captain",
-      it: "Capitano del Toro di Bronzo"
-    },
-    history: {
-      en: "Torico wears a horn-crested bronze helmet resembling the sacred bull statuettes found in nuragic sanctuaries. Representing strength, masculinity, and divine protection, he leads Shardana charges, crushing enemy defense barriers with relentless determination.",
-      it: "Torico indossa un elmo di bronzo crestato di corna che richiama le statuette taurine sacre rinvenute nei santuari nuragici. Rappresentando la forza, la virilità e la protezione divina, guida le cariche degli Shardana, travolgendo le barriere difensive nemiche con implacabile determinazione."
-    }
-  },
-  'Vento di Janas': {
-    title: {
-      en: "Fairy of the Sedini Winds",
-      it: "Fata dei Venti di Sedini"
-    },
-    history: {
-      en: "A mystical Jana who resides inside the cave-dwellings (Domus de Janas) of Sedini. She commands the swift, refreshing breeze to heal wounded warriors, weave protective shields of stardust, and blow away toxins and curses cast by enemy shamans.",
-      it: "Una mistica Jana che risiede nelle case delle fate (Domus de Janas) di Sedini. Comanda la brezza fresca e veloce per curare i guerrieri feriti, tessere scudi protettivi di polvere stellare e spazzare via le tossine e le maledizioni scagliate dagli sciamani nemici."
-    }
-  },
-  'Jana Medusa': {
-    title: {
-      en: "Gold Filigree Weaver",
-      it: "Tessitrice di Filigrana d'Oro"
-    },
-    history: {
-      en: "Jana Medusa is a royal fairy of Sardinian folklore, famous for weaving precious threads of golden filigree on her ancient loom. Her spells can bind the wounds of the entire squad, restoring vitality and shielding them with ancient Nuragic protective runes.",
-      it: "Jana Medusa è una fata regale del folklore sardo, famosa per tessere preziosi fili di filigrana d'oro sul suo antico telaio. I suoi incantesimi curativi fasciano le ferite dell'intera squadra, ripristinando la vitalità e proteggendoli con antiche rune nuragiche di difesa."
-    }
-  },
-  'Eleonora': {
-    title: {
-      en: "Judge of Arborea & Obsidian Priestess",
-      it: "Giudicessa d'Arborea & Sacerdotessa dell'Ossidiana"
-    },
-    history: {
-      en: "Named after Eleonora of Arborea, the legendary ruler who promulgated the famous 'Carta de Logu' code of laws in the 14th century. In our mythos, she acts as an Obsidian Priestess, wielding the power of judicial fate to execute injured adversaries with a swift strike.",
-      it: "Prende il nome da Eleonora d'Arborea, la leggendaria regnante che promuò il celebre codice di leggi 'Carta de Logu' nel XIV secolo. Nel nostro mito, agisce come una Sacerdotessa dell'Ossidiana, brandendo il potere del destino giudiziario per giustiziare con un colpo rapido gli avversari feriti."
-    }
-  },
-  'Mariano': {
-    title: {
-      en: "Sardinian Sovereign & Tactician",
-      it: "Sovrano Sardo & Tattico"
-    },
-    history: {
-      en: "A prominent judge-king of Sardinian history, Mariano is a master tactician. By organizing coordinated military ranks, he enhances the attack power and critical hit rate of all allies on the board, demonstrating the strategic genius of ancient Sardinian self-governance.",
-      it: "Un importante re-giudice della storia sarda, Mariano è un maestro di tattica. Organizzando ranghi militari coordinati, potenzia il potere d'attacco e il tasso critico di tutti gli alleati sul campo, dimostrando il genio strategico dell'antico autogoverno sardo."
-    }
-  },
-  'Amsicora': {
-    title: {
-      en: "The Legendary Leader of Rebellion",
-      it: "Il Leggendario Leader della Ribellione"
-    },
-    history: {
-      en: "Amsicora was a noble Sardinian-Carthaginian landowner and military leader who spearheaded the great rebellion against the Roman Republic in 215 BC. Armed with a heavy bronze sword, he represents the unyielding spirit of Sardinian independence, executing critical blows that shatter enemy formations.",
-      it: "Amsicora fu un nobile proprietario terriero sardo-cartaginese e leader militare che guidò la grande ribellione contro la Repubblica Romana nel 215 a.C. Armato di una pesante spada di bronzo, rappresenta lo spirito indomito dell'indipendenza sarda, infliggendo colpi critici che frantumano le difese nemiche."
-    }
-  },
-  'Gigante Prama': {
-    title: {
-      en: "Ancient Basalt Warrior of Mont'e Prama",
-      it: "Antico Guerriero Basaltico di Mont'e Prama"
-    },
-    history: {
-      en: "Inspired by the famous stone giants discovered at Mont'e Prama (dating back to the 10th-8th century BC), this monumental basalt warrior possesses iconic concentric circles for eyes and carries a massive shield. He is virtually indestructible, absorbing heavy hits for the entire party.",
-      it: "Ispirato ai celebri giganti di pietra scoperti a Mont'e Prama (risalenti al X-VIII secolo a.C.), questo monumentale guerriero di basalto possiede gli iconici occhi a cerchi concentrici e porta un massiccio scudo. È praticamente indistruttibile, assorbendo colpi devastanti al posto della squadra."
-    }
-  },
-  'Liba': {
-    title: {
-      en: "The Supreme Accabadora",
-      it: "L'Accabadora Suprema"
-    },
-    history: {
-      en: "The ultimate 'Accabadora' (from the Sardinian 'acabà', meaning to finish), Liba is a mythic priestess dressed in black. Armed with a ritual olive-wood mallet, she brings a merciful release to the suffering. In battle, she immediately executes any enemy falling below 30% of their maximum health.",
-      it: "La suprema 'Accabadora' (dal sardo 'acabà', finire), Liba è una mitica sacerdotessa vestita di nero. Armata di un mazzuolo rituale di legno d'olivo, porta una misericordiosa fine alle sofferenze. In battaglia, esegue istantaneamente qualsiasi nemico scenda sotto il 30% dei suoi HP massimi."
-    }
-  }
-};
-
-const LOCALIZED_HERO_TEMPLATES: Record<string, { skillName: Translation; desc: Translation }> = {
-  'Josto': {
-    skillName: { en: "Hunter's Slash", it: "Fendente del Cacciatore" },
-    desc: { en: "Skilled Shardana archer, strikes quickly from a distance.", it: "Guerriero Shardana abile con l'arco, colpisce rapidamente a distanza." }
-  },
-  'Caddozzo': {
-    skillName: { en: "Quick Cut", it: "Taglio Rapido" },
-    desc: { en: "Apprentice of the ritual of death, strikes lightning-fast blows from behind.", it: "Apprendista del rito del trapasso, sferra colpi fulminei alle spalle." }
-  },
-  'Bruncu': {
-    skillName: { en: "Crag Wall", it: "Muro di Rupi" },
-    desc: { en: "Sentry of the old nuraghi, erects protective stone barriers.", it: "Guardia dei vecchi nuraghi, erige barriere di pietra protettiva." }
-  },
-  'Mamuthoneddu': {
-    skillName: { en: "Clanging Bells", it: "Squillo di Campanacci" },
-    desc: { en: "Minor masked spirit, disorients enemies with the sound of bells.", it: "Spirito mascherato minore, disorienta i nemici col rumore dei campanacci." }
-  },
-  'Orthobene': {
-    skillName: { en: "Concentric Shield", it: "Scudo Concentrico" },
-    desc: { en: "Moving basalt colossus, draws aggro and increases team defense.", it: "Colosso basaltico semovente, focalizza l'aggro e aumenta la difesa del team." }
-  },
-  'Torico': {
-    skillName: { en: "Bull Charge", it: "Carica del Toro" },
-    desc: { en: "Elite warrior with bronze horns, crashes through enemy frontlines.", it: "Guerriero d'élite con corna di bronzo, travolge le prime linee nemiche." }
-  },
-  'Vento di Janas': {
-    skillName: { en: "Breeze of Sedini", it: "Brezza di Sedini" },
-    desc: { en: "Cave fairy who manipulates healing and cooling wind currents.", it: "Fata delle grotte che manipola le correnti curative e rinfrescanti." }
-  },
-  'Jana Medusa': {
-    skillName: { en: "Sigh of the Domus", it: "Soffio di Domus" },
-    desc: { en: "Fairy weaver of magic filigree, casts powerful team healing spells.", it: "Fata tessitrice di filigrana magica, lancia potenti incantesimi di cura del team." }
-  },
-  'Eleonora': {
-    skillName: { en: "Grace Strike", it: "Colpo di Grazia" },
-    desc: { en: "Priestess of obsidian, executes wounded enemies with fatal damage.", it: "Sacerdotessa dell'ossidiana, giustizia i nemici feriti infliggendo danni fatali." }
-  },
-  'Mariano': {
-    skillName: { en: "Carta de Logu", it: "Carta de Logu" },
-    desc: { en: "Sardinian judge-legislator, orders coordinated strikes boosting team power.", it: "Giudice legislatore sardo, ordina attacchi coordinati aumentando l'efficacia." }
-  },
-  'Amsicora': {
-    skillName: { en: "Bronze Fury", it: "Furia del Bronzo" },
-    desc: { en: "Legendary Sardinian leader, unleashes high crit damage lightning strikes.", it: "Leggendario condottiero sardo, scatena colpi fulminei ad altissimo danno critico." }
-  },
-  'Gigante Prama': {
-    skillName: { en: "Ancestral Fist", it: "Pugno Ancestrale" },
-    desc: { en: "Millennial basalt giant with circular eyes, absorbs massive damage.", it: "Colosso basaltico millenario dagli occhi a cerchio, incassa ingenti danni." }
-  },
-  'Liba': {
-    skillName: { en: "Mallet of Destiny", it: "Mazzuolo del Destino" },
-    desc: { en: "The Supreme Accabadora, immediately executes enemies below 30% HP.", it: "L'Accabadora Suprema, esegue istantaneamente i nemici sotto il 30% di salute." }
-  }
-};
-
 const BRONZE_EQUIPMENTS: Omit<Equipment, 'id'>[] = [
   { name: 'Spada di Bronzo Shardana', type: 'WEAPON', statBonus: { atk: 15 }, icon: '⚔️' },
   { name: 'Pugnale di Ossidiana', type: 'WEAPON', statBonus: { atk: 25, def: -2 }, icon: '🗡️' },
@@ -337,7 +110,7 @@ const STORAGE_KEY = 'aijo_dice_gacha_save';
 
 // Helper per instanziare un eroe con livello, stelle e statistiche base per level up
 function instantiateHero(template: HeroTemplate): Hero {
-  const id = 'h_' + Math.random().toString(36).substr(2, 9);
+  const id = 'h_' + Math.random().toString(36).substring(2, 11);
   return {
     id,
     name: template.name,
@@ -400,33 +173,79 @@ function recalculateHeroStats(hero: Hero) {
 }
 
 function getHeroAvatarHtml(hero: { icon?: string; image?: string }, isIdle = true, mode: 'card' | 'compact' | 'large' = 'card'): string {
+  const idleClass = isIdle ? ' avatar-idle' : '';
   if (hero.image) {
-    const idleClass = isIdle ? ' avatar-idle' : '';
-    let imgSize = 'max-height: 52px;';
-    let containerSize = 'height: 52px;';
-    let marginTop = 'margin-top: 6px;';
-    
-    if (mode === 'compact') {
-      imgSize = 'max-height: 28px;';
-      containerSize = 'height: 30px;';
-      marginTop = 'margin-top: 0;';
-    } else if (mode === 'large') {
-      imgSize = 'max-height: 72px;';
-      containerSize = 'height: 76px;';
-      marginTop = 'margin-top: 0;';
-    }
-
+    const containerClass = mode === 'compact' ? 'avatar-compact' : (mode === 'large' ? 'avatar-large' : 'avatar-card');
+    const fallbackClass = mode === 'compact' ? 'avatar-icon-compact' : (mode === 'large' ? 'avatar-icon-large' : 'avatar-icon-card');
     return `
-      <div style="${containerSize} display: flex; align-items: center; justify-content: center; ${marginTop} margin-bottom: 2px; position: relative; width: 100%;">
-        <img class="avatar-image${idleClass}" src="assets/art/heroes/${hero.image}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="${imgSize}">
-        <div style="font-size: ${mode === 'compact' ? '1rem' : (mode === 'large' ? '2.4rem' : '1.4rem')}; display: none;">${hero.icon || '👤'}</div>
+      <div class="${containerClass}">
+        <img class="avatar-image${idleClass}" src="assets/art/heroes/${hero.image}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="${fallbackClass}" style="display: none;">${hero.icon || '👤'}</div>
       </div>
     `;
   }
-  
-  const fontSize = mode === 'compact' ? '1.1rem' : (mode === 'large' ? '2.4rem' : '1.4rem');
-  const marginTop = mode === 'compact' ? '0' : (mode === 'large' ? '0' : '6px');
-  return `<div style="font-size: ${fontSize}; margin-top: ${marginTop}; margin-bottom: 2px;">${hero.icon || '👤'}</div>`;
+  const iconClass = mode === 'compact' ? 'avatar-icon-compact' : (mode === 'large' ? 'avatar-icon-large' : 'avatar-icon-card');
+  return `<div class="${iconClass}">${hero.icon || '👤'}</div>`;
+}
+
+function getRarityFrameSrc(grade: HeroGrade): string {
+  const map: Record<HeroGrade, string> = {
+    C:  'assets/art/ui_frame_common.svg',
+    R:  'assets/art/ui_frame_rare.svg',
+    S:  'assets/art/ui_frame_special.svg',
+    SR: 'assets/art/ui_frame_super_rare.svg',
+  };
+  return map[grade];
+}
+
+interface FramedCardOptions {
+  showLevel?: boolean;
+  showStars?: boolean;
+  showElem?: boolean;
+  showInspect?: boolean;
+  isIdle?: boolean;
+}
+
+function buildFramedCardInner(
+  hero: { icon?: string; image?: string; name: string; grade: HeroGrade; starRank?: number; level?: number; element?: ElementType },
+  opts: FramedCardOptions = {}
+): string {
+  const { showLevel = false, showStars = false, showElem = false, showInspect = false, isIdle = true } = opts;
+
+  const frameSrc = getRarityFrameSrc(hero.grade);
+  const idleClass = isIdle ? ' avatar-idle' : '';
+
+  const artHtml = hero.image
+    ? `<img class="card-hero-art${idleClass}" src="assets/art/heroes/${hero.image}" alt="${hero.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+       <div class="card-hero-emoji" style="display:none;">${hero.icon || '👤'}</div>`
+    : `<div class="card-hero-emoji">${hero.icon || '👤'}</div>`;
+
+  const starsHtml = showStars && (hero.starRank || 0) > 0
+    ? `<div class="card-stars-overlay">${'⭐'.repeat(hero.starRank || 0)}</div>`
+    : '';
+
+  const levelHtml = showLevel && hero.level
+    ? `<div class="card-level-overlay">LV.${hero.level}</div>`
+    : '';
+
+  const elemHtml = showElem && hero.element
+    ? `<div class="card-elem-overlay">${getElementEmoji(hero.element)}</div>`
+    : '';
+
+  const inspectHtml = showInspect
+    ? `<button class="card-inspect-btn inspect-btn-trigger" title="Dettagli">🔍</button>`
+    : '';
+
+  return `
+    <img class="card-frame-bg" src="${frameSrc}" alt="">
+    ${artHtml}
+    <span class="card-grade-badge ${hero.grade.toLowerCase()}">${hero.grade}</span>
+    ${starsHtml}
+    <div class="card-hero-name-overlay">${hero.name}</div>
+    ${levelHtml}
+    ${elemHtml}
+    ${inspectHtml}
+  `;
 }
 
 function getEnemyAvatarHtml(type: EnemyType): string {
@@ -465,344 +284,6 @@ function calculateHeroSellValue(hero: Hero): number {
   }
 
   return baseValue + duplicateValue + levelRefund;
-}
-
-// ─── AUDIO SYNTHESIZER (WEB AUDIO API) ───
-
-class AudioSynth {
-  private static audioCtx: AudioContext | null = null;
-  private static isMuted = true;
-  private static bgmInterval: number | null = null;
-  private static bgmStep = 0;
-  private static currentBgmMode: 'relaxing' | 'intense' = 'relaxing';
-
-  private static init() {
-    if (this.audioCtx) return;
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (AudioContextClass) {
-      this.audioCtx = new AudioContextClass();
-    }
-  }
-
-  public static toggleMute(): boolean {
-    this.init();
-    
-    if (this.audioCtx && this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
-    }
-
-    this.isMuted = !this.isMuted;
-    
-    if (this.isMuted) {
-      this.stopBgm();
-    } else {
-      this.startBgm();
-    }
-    
-    return this.isMuted;
-  }
-
-  public static setMuted(muted: boolean) {
-    this.init();
-    if (this.audioCtx && this.audioCtx.state === 'suspended' && !muted) {
-      this.audioCtx.resume();
-    }
-    this.isMuted = muted;
-    if (this.isMuted) {
-      this.stopBgm();
-    } else {
-      this.startBgm();
-    }
-  }
-
-  public static getMuteState(): boolean {
-    return this.isMuted;
-  }
-
-  public static setBgmMode(mode: 'relaxing' | 'intense') {
-    if (this.currentBgmMode === mode) return;
-    this.currentBgmMode = mode;
-    if (!this.isMuted) {
-      this.stopBgm();
-      this.startBgm();
-    }
-  }
-
-  private static startBgm() {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-
-    if (this.bgmInterval) clearInterval(this.bgmInterval);
-    
-    const tempo = this.currentBgmMode === 'relaxing' ? 320 : 200;
-    const notesRelaxing = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
-    const notesIntense = [110, 130.81, 146.83, 164.81, 196.00, 220, 261.63, 293.66];
-
-    this.bgmStep = 0;
-    this.bgmInterval = window.setInterval(() => {
-      if (!this.audioCtx || this.isMuted) return;
-      
-      const step = this.bgmStep;
-      this.bgmStep = (this.bgmStep + 1) % 16;
-      
-      if (step === 0 || step === 8) {
-        const bassFreq = this.currentBgmMode === 'relaxing' ? 110 : 55;
-        this.playTone(bassFreq, 'triangle', 0.8, 0.12);
-      }
-
-      if (this.currentBgmMode === 'intense') {
-        if (step % 2 === 0) {
-          if (step % 4 === 0) {
-            this.playDrumKick();
-          } else {
-            this.playDrumSnare();
-          }
-        }
-      } else {
-        if (step === 4 || step === 12) {
-          this.playTone(165, 'sine', 0.3, 0.04);
-        }
-      }
-
-      if (this.currentBgmMode === 'relaxing') {
-        if (step % 4 === 0 || (step % 4 === 2 && Math.random() < 0.6)) {
-          const randNote = notesRelaxing[Math.floor(Math.random() * notesRelaxing.length)];
-          this.playTone(randNote, 'sine', 0.6, 0.06);
-        }
-      } else {
-        if (step % 2 === 0) {
-          const patternIndex = [0, 2, 3, 4, 3, 2, 5, 4, 3, 2, 0, 1, 0, 2, 4, 5][step];
-          const noteFreq = notesIntense[patternIndex % notesIntense.length];
-          this.playTone(noteFreq, 'sawtooth', 0.6, 0.08, true);
-        }
-      }
-    }, tempo);
-  }
-
-  private static stopBgm() {
-    if (this.bgmInterval) {
-      clearInterval(this.bgmInterval);
-      this.bgmInterval = null;
-    }
-  }
-
-  private static playTone(freq: number, type: OscillatorType, duration: number, volume: number, useLowpass = false) {
-    if (!this.audioCtx || this.isMuted) return;
-    
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
-      
-      gain.gain.setValueAtTime(volume, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + duration);
-
-      if (useLowpass) {
-        const filter = this.audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-        filter.frequency.exponentialRampToValueAtTime(100, this.audioCtx.currentTime + duration);
-        osc.connect(filter);
-        filter.connect(gain);
-      } else {
-        osc.connect(gain);
-      }
-
-      gain.connect(this.audioCtx.destination);
-      
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + duration);
-    } catch (e) {}
-  }
-
-  private static playDrumKick() {
-    if (!this.audioCtx || this.isMuted) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      
-      osc.frequency.setValueAtTime(120, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.15);
-      
-      gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.15);
-      
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.15);
-    } catch(e) {}
-  }
-
-  private static playDrumSnare() {
-    if (!this.audioCtx || this.isMuted) return;
-    try {
-      const bufferSize = this.audioCtx.sampleRate * 0.1;
-      const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      
-      const noise = this.audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      
-      const filter = this.audioCtx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1000, this.audioCtx.currentTime);
-      
-      const gain = this.audioCtx.createGain();
-      gain.gain.setValueAtTime(0.06, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.1);
-      
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      noise.start();
-      noise.stop(this.audioCtx.currentTime + 0.1);
-    } catch(e) {}
-  }
-
-  public static playDiceRoll() {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-
-    const now = this.audioCtx.currentTime;
-    for (let i = 0; i < 6; i++) {
-      const timeOffset = i * 0.12;
-      this.playTickAtTime(now + timeOffset);
-    }
-  }
-
-  private static playTickAtTime(time: number) {
-    if (!this.audioCtx) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      
-      osc.frequency.setValueAtTime(800 + Math.random() * 400, time);
-      osc.frequency.exponentialRampToValueAtTime(100, time + 0.04);
-      
-      gain.gain.setValueAtTime(0.06, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
-      
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start(time);
-      osc.stop(time + 0.04);
-    } catch(e) {}
-  }
-
-  public static playCritHit() {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, this.audioCtx.currentTime + 0.25);
-      
-      gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.25);
-      
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.25);
-      
-      this.playTone(1200, 'sine', 0.08, 0.06);
-    } catch(e) {}
-  }
-
-  public static playGachaReveal(grade: HeroGrade) {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-    
-    if (grade === 'C') {
-      this.playToneAtTime(261.63, 0, 0.3, 'sine', 0.15); 
-      this.playToneAtTime(329.63, 0.1, 0.3, 'sine', 0.15); 
-      this.playToneAtTime(392, 0.2, 0.4, 'sine', 0.15); 
-    } else if (grade === 'R') {
-      this.playToneAtTime(220, 0, 0.3, 'sine', 0.2); 
-      this.playToneAtTime(277.18, 0.1, 0.3, 'sine', 0.2); 
-      this.playToneAtTime(329.63, 0.2, 0.5, 'sine', 0.2); 
-    } else if (grade === 'S') {
-      const notes = [293.66, 349.23, 440, 523.25, 587.33]; 
-      notes.forEach((freq, idx) => {
-        this.playToneAtTime(freq, idx * 0.08, 0.4, 'triangle', 0.12);
-      });
-    } else {
-      const notes = [261.63, 329.63, 392, 523.25, 659.25, 783.99, 1046.5]; 
-      notes.forEach((freq, idx) => {
-        this.playToneAtTime(freq, idx * 0.06, 0.6, 'sine', 0.1);
-      });
-      this.playToneAtTime(130.81, 0, 0.8, 'triangle', 0.25);
-    }
-  }
-
-  private static playToneAtTime(freq: number, delay: number, duration: number, type: OscillatorType, volume: number) {
-    if (!this.audioCtx) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      const time = this.audioCtx.currentTime + delay;
-      
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, time);
-      gain.gain.setValueAtTime(volume, time);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start(time);
-      osc.stop(time + duration);
-    } catch(e) {}
-  }
-
-  public static playLevelUp() {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-    this.playToneAtTime(523.25, 0, 0.25, 'sine', 0.2);
-    this.playToneAtTime(659.25, 0.08, 0.25, 'sine', 0.2);
-    this.playToneAtTime(783.99, 0.16, 0.4, 'sine', 0.2);
-  }
-
-  public static playAscension() {
-    this.init();
-    if (!this.audioCtx || this.isMuted) return;
-    const now = this.audioCtx.currentTime;
-    try {
-      const notes = [130.81, 261.63, 392, 523.25];
-      notes.forEach((freq, idx) => {
-        const osc = this.audioCtx!.createOscillator();
-        const filter = this.audioCtx!.createBiquadFilter();
-        const gain = this.audioCtx!.createGain();
-        const time = now + idx * 0.12;
-        const duration = 0.8 - idx * 0.1;
-        
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, time);
-        
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2000, time);
-        filter.frequency.exponentialRampToValueAtTime(200, time + duration);
-        
-        gain.gain.setValueAtTime(0.1, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-        
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.audioCtx!.destination);
-        
-        osc.start(time);
-        osc.stop(time + duration);
-      });
-    } catch(e) {}
-  }
 }
 
 // ─── CANVAS PARTICLE SYSTEM ───
@@ -1285,9 +766,12 @@ function initBoard() {
 
   // Posiziona la pedina
   updatePlayerTokenPosition(gameState.playerPosition);
-  
-  // Centra il sensore all'avvio
-  setTimeout(scrollToPlayer, 200);
+
+  // Disegna il path SVG e centra la telecamera
+  setTimeout(() => {
+    drawBoardPath();
+    scrollToPlayer();
+  }, 50);
 }
 
 // Calcolo matematico della posizione a Serpente scrollabile
@@ -1332,6 +816,53 @@ function updatePlayerTokenPosition(posIndex: number) {
   const { left, top } = getCellSerpentinePosition(posIndex);
   token.style.left = `${left}%`;
   token.style.top = `${top}px`;
+  highlightCurrentCell(posIndex);
+}
+
+function highlightCurrentCell(posIndex: number) {
+  document.querySelectorAll('.board-cell.cell-current').forEach(el => el.classList.remove('cell-current'));
+  document.querySelectorAll('.board-cell.cell-visited').forEach(el => el.classList.remove('cell-visited'));
+  for (let i = 0; i < posIndex; i++) {
+    document.getElementById(`cell-${i}`)?.classList.add('cell-visited');
+  }
+  document.getElementById(`cell-${posIndex}`)?.classList.add('cell-current');
+}
+
+function drawBoardPath() {
+  const container = document.getElementById('board-container')!;
+  const oldSvg = container.querySelector('.board-path-svg');
+  if (oldSvg) oldSvg.remove();
+
+  const containerW = container.clientWidth || 280;
+  const numRows = Math.ceil(board.length / 5);
+  const totalH = numRows * 75 + 80;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('board-path-svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', `${totalH}px`);
+
+  for (let i = 0; i < board.length - 1; i++) {
+    const p1 = getCellSerpentinePosition(i);
+    const p2 = getCellSerpentinePosition(i + 1);
+    const x1 = (p1.left / 100) * containerW + 25;
+    const y1 = p1.top + 25;
+    const x2 = (p2.left / 100) * containerW + 25;
+    const y2 = p2.top + 25;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1.toString());
+    line.setAttribute('y1', y1.toString());
+    line.setAttribute('x2', x2.toString());
+    line.setAttribute('y2', y2.toString());
+    line.setAttribute('stroke', 'rgba(200, 167, 107, 0.16)');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-dasharray', '5 5');
+    line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  }
+
+  container.insertBefore(svg, container.firstChild);
 }
 
 // Centra la telecamera del board container sulla pedina
@@ -1564,6 +1095,15 @@ function startRealTimeCombat(cellType: CellType) {
 
   enemyName.innerText = `${enemy.name} ${enemyElemEmoji} (LIV. ${gameState.level})`;
   enemyAvatar.innerHTML = getEnemyAvatarHtml(enemyType);
+
+  const badgeEl = document.getElementById('enemy-type-badge');
+  if (badgeEl) {
+    const badgeClass = enemyType === 'BOSS' ? 'boss' : (enemyType === 'ELITE' ? 'elite' : 'common');
+    const combatLang = gameState.language || 'en';
+    const badgeText = enemyType === 'BOSS' ? 'BOSS' : (enemyType === 'ELITE' ? 'ELITE' : (combatLang === 'en' ? 'COMMON' : 'COMUNE'));
+    badgeEl.className = `enemy-type-badge ${badgeClass}`;
+    badgeEl.innerText = badgeText;
+  }
   
   // HP Nemico UI
   enemyHpBar.style.width = '100%';
@@ -1571,7 +1111,7 @@ function startRealTimeCombat(cellType: CellType) {
   
   renderCombatTeamGrid();
 
-  let battleTime = 0.0;
+  let ticks = 0;
   const tickRate = 0.1;
   timerEl.innerText = `0.0s`;
 
@@ -1607,7 +1147,8 @@ function startRealTimeCombat(cellType: CellType) {
 
   // Avvia il loop in tempo reale (tick di 100ms)
   combatInterval = window.setInterval(() => {
-    battleTime = parseFloat((battleTime + tickRate).toFixed(1));
+    ticks++;
+    const battleTime = parseFloat((ticks * 0.1).toFixed(1));
     timerEl.innerText = `${battleTime}s`;
 
     // 1. Carica le abilità speciali degli eroi (evocazione/casting)
@@ -1708,8 +1249,8 @@ function startRealTimeCombat(cellType: CellType) {
     });
 
     // 2. Carica abilità nemica
-    enemy.skills.timer = parseFloat((enemy.skills.timer + tickRate).toFixed(1));
-    if (enemy.skills.timer >= enemy.skills.cooldown) {
+    enemy.skills[0].timer = parseFloat((enemy.skills[0].timer + tickRate).toFixed(1));
+    if (enemy.skills[0].timer >= enemy.skills[0].cooldown) {
       const combatLog: string[] = [];
       
       // Animazione Claymation: Nemico Attacco Speciale
@@ -1728,7 +1269,7 @@ function startRealTimeCombat(cellType: CellType) {
         const target = CombatEngine.selectEnemyTarget(gameState.team);
         if (target) {
           const elemMult = CombatEngine.getElementalMultiplier(enemy.element || 'VENTO', target.element || 'VENTO');
-          const dmgVal = Math.max(5, Math.round(enemy.skills.damage - target.defense));
+          const dmgVal = Math.max(5, Math.round(enemy.skills[0].damage - (target.defense + (target.tempCombatDef || 0))));
           const finalDmg = Math.round(dmgVal * elemMult);
 
           // Animazione Claymation: Eroe colpito o abbattuto
@@ -1750,23 +1291,24 @@ function startRealTimeCombat(cellType: CellType) {
         addCombatLog(l, 'text-danger');
       });
       
-      enemy.skills.timer = 0;
+      enemy.skills[0].timer = 0;
       renderCombatTeamGrid();
     }
 
     // 3. Attacchi base dei nostri Eroi vivi (ogni 1.0s)
-    if (parseFloat((battleTime % 1.0).toFixed(1)) === 0) {
+    if (ticks % 10 === 0) {
       const aliveHeroes = gameState.team.filter(h => h.currentHp > 0);
-      if (aliveHeroes.length > 0) {
-        const attacker = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
-        
+      aliveHeroes.forEach(attacker => {
+        if (enemy.currentHp <= 0) return;
+
         const attackerElement = attacker.element || 'VENTO';
         const targetElement = enemy.element || 'VENTO';
         const elemMult = CombatEngine.getElementalMultiplier(attackerElement, targetElement);
 
+        const isCrit = Math.random() < attacker.criticalChance;
         const baseDmg = Math.max(1, attacker.attack - enemy.defense);
-        const dmg = Math.round(baseDmg * elemMult);
-        
+        const dmg = Math.round(baseDmg * elemMult * (isCrit ? 1.5 : 1.0));
+
         // Animazione Claymation: Attacco Eroe
         const row = document.getElementById(`row-${attacker.name.replace(/\s+/g, '')}`);
         if (row) {
@@ -1778,7 +1320,7 @@ function startRealTimeCombat(cellType: CellType) {
         }
 
         enemy.currentHp = Math.max(0, enemy.currentHp - dmg);
-        
+
         // Animazione Claymation: Nemico colpito o abbattuto
         const enemyAvatarEl = document.getElementById('enemy-avatar');
         if (enemyAvatarEl) {
@@ -1793,14 +1335,16 @@ function startRealTimeCombat(cellType: CellType) {
           }
         }
 
-        spawnFloatingDamage(dmg.toString(), false, document.querySelector('.enemy-visual'), elemMult > 1.0);
-        
-        let logMsg = `[${battleTime}s] 🗡️ ${attacker.name} colpisce ${enemy.name} per ${dmg} danni.`;
+        if (isCrit) AudioSynth.playCritHit();
+        spawnFloatingDamage(dmg.toString(), false, document.querySelector('.enemy-visual'), isCrit || elemMult > 1.0);
+
+        let logMsg = `[${battleTime}s] 🗡️ ${attacker.name} colpisce ${enemy.name} per ${dmg} danni${isCrit ? ' 💥CRITICO!' : ''}.`;
         if (elemMult > 1.0) logMsg += ' (🔥 Element Advantage!)';
         if (elemMult < 1.0) logMsg += ' (❄️ Element Disadvantage)';
         addCombatLog(logMsg);
-        
-        // Aggiorna HP nemico
+      });
+
+      if (aliveHeroes.length > 0) {
         enemyHpBar.style.width = `${(enemy.currentHp / enemy.maxHp) * 100}%`;
         enemyHpText.innerText = `${enemy.currentHp}/${enemy.maxHp}`;
       }
@@ -1813,9 +1357,9 @@ function startRealTimeCombat(cellType: CellType) {
           const targetElement = target.element || 'VENTO';
           const elemMult = CombatEngine.getElementalMultiplier(attackerElement, targetElement);
 
-          const baseDmg = Math.max(1, enemy.attack - target.defense);
+          const baseDmg = Math.max(1, enemy.attack - (target.defense + (target.tempCombatDef || 0)));
           const dmg = Math.round(baseDmg * elemMult);
-          
+
           // Animazione Claymation: Nemico Attacca
           const enemyAvatarEl = document.getElementById('enemy-avatar');
           if (enemyAvatarEl) {
@@ -1869,6 +1413,7 @@ function startRealTimeCombat(cellType: CellType) {
         h.defense = originalDefenses[idx];
         h.skillCooldown = originalCooldowns[idx];
         h.criticalChance = originalCrits[idx];
+        h.tempCombatDef = 0;
       });
       
       setTimeout(() => endCombat(true, cellType), 1500);
@@ -1882,12 +1427,23 @@ function startRealTimeCombat(cellType: CellType) {
         h.defense = originalDefenses[idx];
         h.skillCooldown = originalCooldowns[idx];
         h.criticalChance = originalCrits[idx];
+        h.tempCombatDef = 0;
       });
 
       setTimeout(() => endCombat(false, cellType), 1500);
     }
   }, 100);
 }
+
+function getHpBarColor(pct: number): string {
+  if (pct > 60) return '#52B788';
+  if (pct > 30) return '#F77F00';
+  return '#E63946';
+}
+
+const GRADE_BORDER_COLOR: Record<string, string> = {
+  C: '#8e9aa6', R: '#3182ce', S: '#805ad5', SR: '#c8a76b'
+};
 
 function renderCombatTeamGrid() {
   const grid = document.getElementById('combat-team-grid')!;
@@ -1897,19 +1453,21 @@ function renderCombatTeamGrid() {
     const row = document.createElement('div');
     row.className = `combat-hero-row ${hero.currentHp <= 0 ? 'dead' : ''}`;
     row.id = `row-${hero.name.replace(/\s+/g, '')}`;
+    row.style.borderLeftColor = GRADE_BORDER_COLOR[hero.grade] || '#8e9aa6';
 
-    const hpPercentage = (hero.currentHp / hero.maxHp) * 100;
+    const hpPct = Math.max(0, (hero.currentHp / hero.maxHp) * 100);
+    const hpColor = hero.currentHp <= 0 ? '#444' : getHpBarColor(hpPct);
     const elemEmoji = getElementEmoji(hero.element);
 
     row.innerHTML = `
-      <div class="ch-avatar-wrap" style="border-color: var(--${hero.grade.toLowerCase()}); display: flex; align-items: center; justify-content: center; position: relative; overflow: visible;">${getHeroAvatarHtml(hero, hero.currentHp > 0, 'compact')}</div>
+      <div class="ch-avatar-wrap" style="border-color: ${GRADE_BORDER_COLOR[hero.grade] || 'var(--gold)'}; display: flex; align-items: center; justify-content: center; position: relative; overflow: visible;">${getHeroAvatarHtml(hero, hero.currentHp > 0, 'compact')}</div>
       <div class="ch-info">
-        <div style="display: flex; justify-content: space-between;">
-          <span class="ch-name">${hero.name} ${elemEmoji} (LIV. ${hero.level})</span>
-          <span class="ch-name" style="font-size: 0.6rem;">HP ${hero.currentHp}/${hero.maxHp}</span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span class="ch-name">${hero.name} ${elemEmoji}</span>
+          <span style="font-size: 0.56rem; color: var(--text-muted); flex-shrink:0; margin-left:4px;">HP ${hero.currentHp}/${hero.maxHp}</span>
         </div>
-        <div class="hp-bar-wrapper" style="height: 6px; margin-top: 2px;">
-          <div class="hp-bar ch-hp-bar" style="width: ${hpPercentage}%; background-color: ${hero.currentHp <= 0 ? '#555' : ''};"></div>
+        <div class="ch-hp-bar-wrapper">
+          <div class="ch-hp-bar" style="width: ${hpPct}%; background-color: ${hpColor};"></div>
         </div>
         <div class="ch-skill-bar-wrapper">
           <div class="ch-skill-bar" id="skill-bar-${hero.name.replace(/\s+/g, '')}"></div>
@@ -2031,26 +1589,12 @@ function renderActiveSlots() {
 
   gameState.team.forEach((hero, index) => {
     const el = document.createElement('div');
-    el.className = `hero-slot active-card grade-${hero.grade.toLowerCase()}`;
+    el.className = `hero-slot hero-framed active-card grade-${hero.grade.toLowerCase()}`;
     el.setAttribute('draggable', 'true');
     el.dataset.index = index.toString();
     el.dataset.area = 'active';
 
-    let starsHtml = '';
-    for (let s = 0; s < (hero.starRank || 0); s++) {
-      starsHtml += '⭐';
-    }
-
-    const elemEmoji = getElementEmoji(hero.element);
-
-    el.innerHTML = `
-      <button class="inspect-btn-trigger" title="Dettagli" style="position: absolute; top: 1px; right: 1px; background: none; border: none; font-size: 0.58rem; cursor: pointer; color: var(--gold);">🔍</button>
-      <span style="position: absolute; top: 1px; left: 1px; font-size: 0.52rem;">${elemEmoji}</span>
-      ${getHeroAvatarHtml(hero, true, 'card')}
-      <div style="font-size: 0.52rem; font-weight:700; color: #fff;">${hero.name}</div>
-      <div style="font-size: 0.45rem; color: var(--gold);">LIV. ${hero.level}</div>
-      <div style="font-size: 0.38rem; color: #fff4d4; margin-top: 1px;">${starsHtml}</div>
-    `;
+    el.innerHTML = buildFramedCardInner(hero, { showLevel: true, showStars: true, showElem: true, showInspect: true, isIdle: true });
 
     el.addEventListener('dragstart', handleDragStart);
     el.addEventListener('dragover', handleDragOver);
@@ -2074,26 +1618,12 @@ function renderInventorySlots() {
 
   gameState.inventory.forEach((hero, index) => {
     const el = document.createElement('div');
-    el.className = `hero-slot grade-${hero.grade.toLowerCase()}`;
+    el.className = `hero-slot hero-framed grade-${hero.grade.toLowerCase()}`;
     el.setAttribute('draggable', 'true');
     el.dataset.index = index.toString();
     el.dataset.area = 'inventory';
 
-    let starsHtml = '';
-    for (let s = 0; s < (hero.starRank || 0); s++) {
-      starsHtml += '⭐';
-    }
-
-    const elemEmoji = getElementEmoji(hero.element);
-
-    el.innerHTML = `
-      <button class="inspect-btn-trigger" title="Dettagli" style="position: absolute; top: 1px; right: 1px; background: none; border: none; font-size: 0.58rem; cursor: pointer; color: var(--gold);">🔍</button>
-      <span style="position: absolute; top: 1px; left: 1px; font-size: 0.52rem;">${elemEmoji}</span>
-      ${getHeroAvatarHtml(hero, true, 'card')}
-      <div style="font-size: 0.52rem; font-weight:700; color: #fff;">${hero.name}</div>
-      <div style="font-size: 0.45rem; color: #8892b0;">LIV. ${hero.level}</div>
-      <div style="font-size: 0.38rem; color: #fff4d4; margin-top: 1px;">${starsHtml}</div>
-    `;
+    el.innerHTML = buildFramedCardInner(hero, { showLevel: true, showStars: true, showElem: true, showInspect: true, isIdle: true });
 
     el.addEventListener('dragstart', handleDragStart);
     el.addEventListener('dragover', handleDragOver);
@@ -2240,7 +1770,7 @@ function openHeroInspector(hero: Hero, index: number, area: string) {
   
   // Trova le info dal template originale per la descrizione dell'abilità
   const lang = gameState.language || 'en';
-  const localizedInfo = LOCALIZED_HERO_TEMPLATES[hero.name];
+  const localizedInfo = HEROES_BY_NAME[hero.name]?.localized;
   if (localizedInfo) {
     document.getElementById('inspect-skill-name')!.innerText = localizedInfo.skillName[lang];
     document.getElementById('inspect-skill-desc')!.innerText = localizedInfo.desc[lang];
@@ -2830,7 +2360,7 @@ function buyMerchantEquip() {
   const baseEquip = BRONZE_EQUIPMENTS[Math.floor(Math.random() * BRONZE_EQUIPMENTS.length)];
   const equip: Equipment = {
     ...baseEquip,
-    id: 'eq_' + Math.random().toString(36).substr(2, 9)
+    id: 'eq_' + Math.random().toString(36).substring(2, 11)
   };
   gameState.equipmentInventory.push(equip);
 
@@ -2953,13 +2483,16 @@ async function pullGacha(pullsCount: number) {
   // Avvia animazione visiva a tutto schermo
   const overlay = document.getElementById('popup-gacha-reveal')!;
   const vortex = document.getElementById('portal-vortex')!;
+  const vortex2 = document.getElementById('portal-vortex-2')!;
+  const vortex3 = document.getElementById('portal-vortex-3')!;
   const flash = document.getElementById('portal-flash')!;
   const revealContainer = document.getElementById('gacha-reveal-container')!;
   const cardsDisplay = document.getElementById('gacha-cards-display')!;
 
   overlay.classList.add('active');
-  vortex.style.display = 'block';
   vortex.className = 'gacha-portal-vortex active';
+  vortex2.className = 'gacha-portal-vortex-2 active';
+  vortex3.className = 'gacha-portal-vortex-3 active';
   revealContainer.style.display = 'none';
   cardsDisplay.innerHTML = '';
 
@@ -2982,23 +2515,28 @@ async function pullGacha(pullsCount: number) {
   // Durata della concentrazione runica
   await sleep(1500);
 
-  // Colora la spirale runica in base alla rarità massima prima del flash!
-  let glowColor = 'rgba(142, 154, 166, 0.4)'; // Comune
-  if (maxGrade === 'SR') glowColor = 'rgba(200, 167, 107, 0.9)';
-  else if (maxGrade === 'S') glowColor = 'rgba(128, 90, 213, 0.8)';
-  else if (maxGrade === 'R') glowColor = 'rgba(49, 130, 206, 0.8)';
-  
-  vortex.style.borderColor = maxGrade === 'SR' ? 'var(--super-rare)' : (maxGrade === 'S' ? 'var(--special)' : (maxGrade === 'R' ? 'var(--rare)' : 'var(--common)'));
+  // Colora i vortici in base alla rarità massima
+  const rarityColor = maxGrade === 'SR' ? 'var(--super-rare)' : (maxGrade === 'S' ? 'var(--special)' : (maxGrade === 'R' ? 'var(--rare)' : 'var(--common)'));
+  vortex.style.borderColor = rarityColor;
+  vortex2.style.borderColor = rarityColor;
+  vortex3.style.borderColor = rarityColor;
+  if (maxGrade === 'SR') {
+    vortex.style.boxShadow = '0 0 30px rgba(200,167,107,0.5), inset 0 0 40px rgba(200,167,107,0.15)';
+  } else if (maxGrade === 'S') {
+    vortex.style.boxShadow = '0 0 25px rgba(128,90,213,0.5), inset 0 0 30px rgba(128,90,213,0.1)';
+  }
 
   await sleep(600);
 
   // Trigger flash bianco accecante
   flash.className = 'gacha-portal-flash flash-trigger';
-  
+
   await sleep(350);
 
-  // Nascondi vortex, mostra le carte
-  vortex.style.display = 'none';
+  // Nascondi vortici, mostra le carte
+  vortex.className = 'gacha-portal-vortex';
+  vortex2.className = 'gacha-portal-vortex-2';
+  vortex3.className = 'gacha-portal-vortex-3';
   revealContainer.style.display = 'block';
   flash.className = 'gacha-portal-flash';
 
@@ -3013,25 +2551,16 @@ async function pullGacha(pullsCount: number) {
       : '✨ <span style="color: var(--super-rare); font-weight:700;">RISVEGLIO LEGGENDARIO!</span> ✨';
   }
 
-  // Rende le carte svelate visivamente
+  // Rende le carte svelate visivamente (inizialmente invisibili — flip reveal le animerà)
   pulledHeroes.forEach(hero => {
     const card = document.createElement('div');
-    card.className = `hero-slot grade-${hero.grade.toLowerCase()}`;
+    card.className = `hero-slot hero-framed grade-${hero.grade.toLowerCase()}`;
     card.style.width = '75px';
     card.style.height = '105px';
     card.style.cursor = 'default';
-    card.style.transform = 'scale(0.1)';
     card.style.opacity = '0';
-    card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s';
-    
-    const elemEmoji = getElementEmoji(hero.element);
 
-    card.innerHTML = `
-      <span style="position: absolute; top: 1px; left: 1px; font-size: 0.52rem;">${elemEmoji}</span>
-      <div style="font-size: 1.6rem; margin-top: 6px; margin-bottom: 2px;">${hero.icon}</div>
-      <div style="font-size: 0.58rem; font-weight:700; color: #fff;">${hero.name}</div>
-      <div style="font-size: 0.48rem; color: var(--${hero.grade.toLowerCase()}); font-weight:600; text-transform: uppercase;">${hero.grade}</div>
-    `;
+    card.innerHTML = buildFramedCardInner(hero, { showElem: true, isIdle: false });
 
     cardsDisplay.appendChild(card);
     
@@ -3043,10 +2572,11 @@ async function pullGacha(pullsCount: number) {
   // Animazione sequenziale a cascata per rivelare le carte (effetto premium!)
   const renderedCards = cardsDisplay.querySelectorAll('.hero-slot') as NodeListOf<HTMLElement>;
   for (let c = 0; c < renderedCards.length; c++) {
-    await sleep(150);
-    renderedCards[c].style.transform = 'scale(1)';
-    renderedCards[c].style.opacity = '1';
-    
+    await sleep(160);
+    // Rimuovi inline opacity e triggera l'animazione flip 3D
+    renderedCards[c].style.opacity = '';
+    renderedCards[c].classList.add('card-flip-reveal');
+
     // Suono e particelle di svelamento!
     const hero = pulledHeroes[c];
     AudioSynth.playGachaReveal(hero.grade);
@@ -3100,7 +2630,7 @@ function translateAllHeroInstanceNamesAndSkills() {
   const lang = gameState.language || 'en';
   
   const translateHero = (h: Hero) => {
-    const loc = LOCALIZED_HERO_TEMPLATES[h.name];
+    const loc = HEROES_BY_NAME[h.name]?.localized;
     if (loc) {
       h.skillName = loc.skillName[lang];
       h.desc = loc.desc[lang];
@@ -3229,23 +2759,17 @@ function renderCodexGrid() {
     const isUnlocked = gameState.unlockedCollection ? gameState.unlockedCollection.includes(template.name) : false;
     
     const card = document.createElement('div');
-    card.className = `codex-card ${isUnlocked ? '' : 'locked'}`;
-    
-    // Mostra il grado
-    const gradeBadge = `<span class="codex-card-grade ${template.grade.toLowerCase()}">${template.grade}</span>`;
-    
+    card.className = `codex-card hero-framed grade-${template.grade.toLowerCase()} ${isUnlocked ? '' : 'locked'}`;
+
     if (isUnlocked) {
-      card.innerHTML = `
-        ${gradeBadge}
-        <div class="codex-card-avatar" style="width: 100%; display: flex; align-items: center; justify-content: center;">${getHeroAvatarHtml(template, true, 'card')}</div>
-        <div class="codex-card-name">${template.name}</div>
-      `;
+      card.innerHTML = buildFramedCardInner(template, { isIdle: true });
       card.addEventListener('click', () => openCodexLore(template.name));
     } else {
       card.innerHTML = `
-        ${gradeBadge}
-        <div class="codex-card-avatar">🔒</div>
-        <div class="codex-card-name">???</div>
+        <img class="card-frame-bg" src="${getRarityFrameSrc(template.grade)}" alt="" style="filter: grayscale(1) opacity(0.3);">
+        <div class="card-hero-emoji">🔒</div>
+        <div class="card-hero-name-overlay">???</div>
+        <span class="card-grade-badge ${template.grade.toLowerCase()}">${template.grade}</span>
       `;
     }
     
@@ -3263,7 +2787,7 @@ function openCodexLore(heroName: string) {
   const lang = gameState.language || 'en';
   
   const template = Object.values(HERO_TEMPLATES).find(t => t.name === heroName);
-  const lore = HERO_LORE_DATABASE[heroName];
+  const lore = HEROES_BY_NAME[heroName]?.lore;
   
   if (template && lore) {
     nameEl.innerText = template.name;

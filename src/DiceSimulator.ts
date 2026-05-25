@@ -228,7 +228,7 @@ async function runSimulation() {
         const enemy = CombatEngine.spawnEnemy(state.currentLevel, enemyType);
         console.log(`⚔️ Incontro nemico ostile! Inizio dello scontro automatico in TEMPO REALE vs [Nemico: ${enemy.name} | Elemento: ${enemy.element}]`);
         
-        const battle = CombatEngine.simulateRealTimeCombat(state.team, enemy);
+        const battle = CombatEngine.simulateRealTimeCombat(state.team, enemy, 'it');
         
         // Stampa il log completo della timeline della battaglia in tempo reale
         battle.log.forEach(l => console.log(`   ${l}`));
