@@ -98,11 +98,19 @@ const initialTeam: Hero[] = [
 
 // 2. Stato iniziale del Gioco
 const state: GameState = {
+  profileLevel: 1,
+  profileExp: 0,
+  eternalGems: 10,
+  unlockedCollection: ['Amsicora', 'Jana Medusa', 'Orthobene', 'Eleonora', 'Josto'],
   currentLevel: 1,
   playerPosition: 0,
   coins: 800, // Più soldi per consentire gli acquisti al mercante
   gems: 10,
   team: initialTeam,
+  inventory: [],
+  equipmentInventory: [],
+  language: 'it',
+  pityCounter: 0,
 };
 
 async function sleep(ms: number) {

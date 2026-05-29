@@ -119,20 +119,22 @@
           </div>
 
           <!-- Mappa a Serpente con Caselle -->
-          <div class="serpentine-board-container" id="board-container">
-            <!-- Le caselle verranno generate dinamicamente qui in JS -->
-            
-            <!-- Pedina Giocatore Dorata Shardana -->
-            <div class="player-token" id="player-token">
-              <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="32" fill="#c8a76b" stroke="#fff4d4" stroke-width="2.5"/>
-                <!-- Elmo cornuto Shardana stilizzato -->
-                <path d="M50 35 C53 35, 56 38, 56 43 C56 48, 50 53, 50 53 C50 53, 44 48, 44 43 C44 38, 47 35, 50 35 Z" fill="#5c441c"/>
-                <path d="M47 36 C40 28, 38 21, 39 18 C40 20, 44 26, 48 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
-                <path d="M53 36 C60 28, 62 21, 61 18 C60 20, 56 26, 52 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="39" cy="17" r="2.5" fill="#fff4d4"/>
-                <circle cx="61" cy="17" r="2.5" fill="#fff4d4"/>
-              </svg>
+          <div class="serpentine-board-container" id="serpentine-scroll">
+            <div id="board-container" style="position: relative; width: 100%;">
+              <!-- Le caselle verranno generate dinamicamente qui in JS -->
+
+              <!-- Pedina Giocatore Dorata Shardana -->
+              <div class="player-token" id="player-token">
+                <svg viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="32" fill="#c8a76b" stroke="#fff4d4" stroke-width="2.5"/>
+                  <!-- Elmo cornuto Shardana stilizzato -->
+                  <path d="M50 35 C53 35, 56 38, 56 43 C56 48, 50 53, 50 53 C50 53, 44 48, 44 43 C44 38, 47 35, 50 35 Z" fill="#5c441c"/>
+                  <path d="M47 36 C40 28, 38 21, 39 18 C40 20, 44 26, 48 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M53 36 C60 28, 62 21, 61 18 C60 20, 56 26, 52 34" fill="none" stroke="#fff4d4" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="39" cy="17" r="2.5" fill="#fff4d4"/>
+                  <circle cx="61" cy="17" r="2.5" fill="#fff4d4"/>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -245,8 +247,16 @@
               <span class="rate-badge grade-c">C: 70%</span>
               <span class="rate-badge grade-r">R: 20%</span>
               <span class="rate-badge grade-s">S: 8%</span>
-              <span class="rate-badge grade-sr">SR: 2%</span>
+              <span class="rate-badge grade-sr">SR: 2%*</span>
             </div>
+            <div class="pity-display" id="pity-display">
+              <span class="pity-label">Pity:</span>
+              <span class="pity-bar-wrap">
+                <span class="pity-bar-fill" id="pity-bar-fill"></span>
+              </span>
+              <span class="pity-count" id="pity-count">0/60</span>
+            </div>
+            <div class="pity-note">*Soft pity al pull 40 · Garantita SR al pull 60</div>
           </div>
           
           <div class="gacha-altar">
@@ -579,6 +589,32 @@
       <p id="recruit-desc" style="font-size: 0.75rem; margin-bottom: 1rem;">Guerrieri sardi offrono i propri servigi.</p>
       <div id="recruit-items" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem;"></div>
       <button class="btn-popup-close" id="btn-recruit-close" style="background: var(--gold); color: #000;">Prosegui ➔</button>
+    </div>
+  </div>
+
+  <!-- POPUP LANDMARK: Rivelazione cinematica di ogni nuova tappa -->
+  <div class="popup-overlay popup-landmark-overlay" id="popup-landmark" style="z-index: 210; align-items: stretch;">
+    <div class="landmark-popup">
+
+      <!-- Zona visuale (immagine o placeholder CSS) -->
+      <div class="landmark-visual" id="landmark-visual">
+        <div class="landmark-placeholder" id="landmark-placeholder">
+          <div class="landmark-placeholder-icon" id="landmark-icon-large">🏛️</div>
+          <div class="landmark-placeholder-glow" id="landmark-placeholder-glow"></div>
+        </div>
+        <img class="landmark-img" id="landmark-img" alt="" />
+      </div>
+
+      <!-- Pannello info in basso -->
+      <div class="landmark-bottom">
+        <div class="landmark-badge" id="landmark-badge">TAPPA 1</div>
+        <h2 class="landmark-name" id="landmark-name">Nuraghe Losa</h2>
+        <p class="landmark-desc" id="landmark-desc">Il sentiero dei Mamuthones selvaggi</p>
+        <button class="btn-landmark-go" id="btn-landmark-go">⚔️ AVVENTURA!</button>
+      </div>
+
+      <!-- Skip button -->
+      <button class="btn-landmark-skip" id="btn-landmark-skip" title="Salta">✕</button>
     </div>
   </div>
 

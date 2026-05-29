@@ -66,6 +66,7 @@ export interface Enemy {
     damage: number;
     cooldown: number;
     timer: number;
+    type?: 'DAMAGE' | 'AOE' | 'HEAL' | 'DEBUFF';
   }[];
 }
 
@@ -94,5 +95,6 @@ export interface GameState {
   inventory: Hero[]; // Inventario riserve
   equipmentInventory: Equipment[]; // Inventario equipaggiamento
   language: 'en' | 'it';
+  pityCounter: number; // pulls since last SR (soft pity at 40, hard pity at 60)
 }
 

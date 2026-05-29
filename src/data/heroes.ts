@@ -18,6 +18,7 @@ export interface HeroTemplate {
   desc: string;
   element: ElementType;
   image?: string;
+  requiredProfileLevel?: number;
 }
 
 export interface HeroLore {
@@ -34,7 +35,7 @@ export interface HeroEntry {
 // Single source of truth for all hero data
 export const HEROES: Record<string, HeroEntry> = {
   SHARDANA_C: {
-    template: { name: 'Josto', heroClass: 'SHARDANA', grade: 'C', maxHp: 100, attack: 20, defense: 5, skillCooldown: 3.8, icon: '🏹', skillName: 'Fendente del Cacciatore', desc: 'Guerriero Shardana abile con l\'arco, colpisce rapidamente a distanza.', element: 'VENTO', image: 'josto.png' },
+    template: { name: 'Josto', heroClass: 'SHARDANA', grade: 'C', maxHp: 100, attack: 20, defense: 5, skillCooldown: 3.8, icon: '🏹', skillName: 'Fendente del Cacciatore', desc: 'Guerriero Shardana abile con l\'arco, colpisce rapidamente a distanza.', element: 'VENTO', image: 'josto.png', requiredProfileLevel: 1 },
     lore: {
       title: { en: 'Son of Amsicora & Shardana Patriot', it: 'Figlio di Amsicora & Patriota Shardana' },
       history: {
@@ -48,7 +49,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   ACCABADORA_C: {
-    template: { name: 'Caddozzo', heroClass: 'ACCABADORA', grade: 'C', maxHp: 90, attack: 18, defense: 4, skillCooldown: 3.2, icon: '🔪', skillName: 'Taglio Rapido', desc: 'Apprendista del rito del trapasso, sferra colpi fulminei alle spalle.', element: 'ACQUA', image: 'caddozzo.png' },
+    template: { name: 'Caddozzo', heroClass: 'ACCABADORA', grade: 'C', maxHp: 90, attack: 18, defense: 4, skillCooldown: 3.2, icon: '🔪', skillName: 'Taglio Rapido', desc: 'Apprendista del rito del trapasso, sferra colpi fulminei alle spalle.', element: 'ACQUA', image: 'caddozzo.png', requiredProfileLevel: 1 },
     lore: {
       title: { en: 'Novice of the Trappas & Obsidian Shadow', it: 'Novizio del Trapasso & Ombra d\'Ossidiana' },
       history: {
@@ -62,7 +63,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   GIGANTE_C: {
-    template: { name: 'Bruncu', heroClass: 'GIGANTE', grade: 'C', maxHp: 200, attack: 16, defense: 8, skillCooldown: 5.5, icon: '🧱', skillName: 'Muro di Rupi', desc: 'Guardia dei vecchi nuraghi, erige barriere di pietra protettiva.', element: 'PIETRA', image: 'bruncu.png' },
+    template: { name: 'Bruncu', heroClass: 'GIGANTE', grade: 'C', maxHp: 200, attack: 16, defense: 8, skillCooldown: 5.5, icon: '🧱', skillName: 'Muro di Rupi', desc: 'Guardia dei vecchi nuraghi, erige barriere di pietra protettiva.', element: 'PIETRA', image: 'bruncu.png', requiredProfileLevel: 1 },
     lore: {
       title: { en: 'Basalt Sentry of the Giants', it: 'Sentinella Basaltica dei Giganti' },
       history: {
@@ -76,7 +77,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   JANA_C: {
-    template: { name: 'Mamuthoneddu', heroClass: 'JANA', grade: 'C', maxHp: 95, attack: 21, defense: 3, skillCooldown: 4.2, icon: '🎭', skillName: 'Squillo di Campanacci', desc: 'Spirito mascherato minore, disorienta i nemici col rumore dei campanacci.', element: 'VENTO', image: 'mamuthoneddu.png' },
+    template: { name: 'Mamuthoneddu', heroClass: 'JANA', grade: 'C', maxHp: 95, attack: 21, defense: 3, skillCooldown: 4.2, icon: '🎭', skillName: 'Squillo di Campanacci', desc: 'Spirito mascherato minore, disorienta i nemici col rumore dei campanacci.', element: 'VENTO', image: 'mamuthoneddu.png', requiredProfileLevel: 1 },
     lore: {
       title: { en: 'Minor Spirit of the Mask', it: 'Spirito Minore della Maschera' },
       history: {
@@ -90,7 +91,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   GIGANTE_R: {
-    template: { name: 'Orthobene', heroClass: 'GIGANTE', grade: 'R', maxHp: 250, attack: 22, defense: 12, skillCooldown: 5.0, icon: '🗿', skillName: 'Scudo Concentrico', desc: 'Colosso basaltico semovente, focalizza l\'aggro e aumenta la difesa del team.', element: 'PIETRA', image: 'orthobene.png' },
+    template: { name: 'Orthobene', heroClass: 'GIGANTE', grade: 'R', maxHp: 250, attack: 22, defense: 12, skillCooldown: 5.0, icon: '🗿', skillName: 'Scudo Concentrico', desc: 'Colosso basaltico semovente, focalizza l\'aggro e aumenta la difesa del team.', element: 'PIETRA', image: 'orthobene.png', requiredProfileLevel: 2 },
     lore: {
       title: { en: 'Colossus of the Silent Peak', it: 'Colosso della Vetta Silente' },
       history: {
@@ -104,7 +105,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   SHARDANA_R: {
-    template: { name: 'Torico', heroClass: 'SHARDANA', grade: 'R', maxHp: 160, attack: 25, defense: 9, skillCooldown: 3.6, icon: '🛡️', skillName: 'Carica del Toro', desc: 'Guerriero d\'élite con corna di bronzo, travolge le prime linee nemiche.', element: 'OSSIDIANA', image: 'torico.png' },
+    template: { name: 'Torico', heroClass: 'SHARDANA', grade: 'R', maxHp: 160, attack: 25, defense: 9, skillCooldown: 3.6, icon: '🛡️', skillName: 'Carica del Toro', desc: 'Guerriero d\'élite con corna di bronzo, travolge le prime linee nemiche.', element: 'OSSIDIANA', image: 'torico.png', requiredProfileLevel: 2 },
     lore: {
       title: { en: 'Bronze Bull Captain', it: 'Capitano del Toro di Bronzo' },
       history: {
@@ -118,7 +119,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   JANA_R: {
-    template: { name: 'Vento di Janas', heroClass: 'JANA', grade: 'R', maxHp: 110, attack: 26, defense: 5, skillCooldown: 4.1, icon: '🌬️', skillName: 'Brezza di Sedini', desc: 'Fata delle grotte che manipola le correnti curative e rinfrescanti.', element: 'VENTO', image: 'vento_di_janas.png' },
+    template: { name: 'Vento di Janas', heroClass: 'JANA', grade: 'R', maxHp: 110, attack: 26, defense: 5, skillCooldown: 4.1, icon: '🌬️', skillName: 'Brezza di Sedini', desc: 'Fata delle grotte che manipola le correnti curative e rinfrescanti.', element: 'VENTO', image: 'vento_di_janas.png', requiredProfileLevel: 2 },
     lore: {
       title: { en: 'Fairy of the Sedini Winds', it: 'Fata dei Venti di Sedini' },
       history: {
@@ -132,12 +133,12 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   JANA_S: {
-    template: { name: 'Jana Medusa', heroClass: 'JANA', grade: 'S', maxHp: 120, attack: 28, defense: 4, skillCooldown: 4.0, icon: '✨', skillName: 'Soffio di Domus', desc: 'Fata tessitrice di filigrana magica, lancia potenti incantesimi di cura del team.', element: 'ACQUA', image: 'jana_medusa.png' },
+    template: { name: 'Jana Medusa', heroClass: 'JANA', grade: 'S', maxHp: 120, attack: 28, defense: 4, skillCooldown: 4.0, icon: '✨', skillName: 'Soffio di Domus', desc: 'Fata tessitrice di filigrana magica, lancia potenti incantesimi di cura del team.', element: 'ACQUA', image: 'jana_medusa.png', requiredProfileLevel: 4 },
     lore: {
       title: { en: 'Gold Filigree Weaver', it: 'Tessitrice di Filigrana d\'Oro' },
       history: {
         en: 'Jana Medusa is a royal fairy of Sardinian folklore, famous for weaving precious threads of golden filigree on her ancient loom. Her spells can bind the wounds of the entire squad, restoring vitality and shielding them with ancient Nuragic protective runes.',
-        it: 'Jana Medusa è una fata regale del folklore sardo, famosa per tessere preziosi fili di filigrana d\'oro sul suo antico telaio. I suoi incantesimi curativi fasciano le ferite dell\'intera squadra, ripristinando la vitalità e proteggendoli con antiche rune nuragiche di difesa.'
+        it: 'Jana Medusa è una fata regale del folklore sardo, famosa per tessere preziosi fili di filigrana d\'oro sul suo antico telaio. I suoi incantesimi curativi fasciano le ferite dell\'intera squadra, ripristinando la validità e proteggendoli con antiche rune nuragiche di difesa.'
       }
     },
     localized: {
@@ -146,7 +147,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   ACCABADORA_S: {
-    template: { name: 'Eleonora', heroClass: 'ACCABADORA', grade: 'S', maxHp: 130, attack: 34, defense: 5, skillCooldown: 3.0, icon: '💀', skillName: 'Colpo di Grazia', desc: 'Sacerdotessa dell\'ossidiana, giustizia i nemici feriti infliggendo danni fatali.', element: 'OSSIDIANA', image: 'eleonora.png' },
+    template: { name: 'Eleonora', heroClass: 'ACCABADORA', grade: 'S', maxHp: 130, attack: 34, defense: 5, skillCooldown: 3.0, icon: '💀', skillName: 'Colpo di Grazia', desc: 'Sacerdotessa dell\'ossidiana, giustizia i nemici feriti infliggendo danni fatali.', element: 'OSSIDIANA', image: 'eleonora.png', requiredProfileLevel: 4 },
     lore: {
       title: { en: 'Judge of Arborea & Obsidian Priestess', it: 'Giudicessa d\'Arborea & Sacerdotessa dell\'Ossidiana' },
       history: {
@@ -160,7 +161,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   SHARDANA_S: {
-    template: { name: 'Mariano', heroClass: 'SHARDANA', grade: 'S', maxHp: 140, attack: 30, defense: 7, skillCooldown: 3.5, icon: '📜', skillName: 'Carta de Logu', desc: 'Giudice legislatore sardo, ordina attacchi coordinati aumentando l\'efficacia.', element: 'PIETRA', image: 'mariano.png' },
+    template: { name: 'Mariano', heroClass: 'SHARDANA', grade: 'S', maxHp: 140, attack: 30, defense: 7, skillCooldown: 3.5, icon: '📜', skillName: 'Carta de Logu', desc: 'Giudice legislatore sardo, ordina attacchi coordinati aumentando l\'efficacia.', element: 'PIETRA', image: 'mariano.png', requiredProfileLevel: 4 },
     lore: {
       title: { en: 'Sardinian Sovereign & Tactician', it: 'Sovrano Sardo & Tattico' },
       history: {
@@ -174,7 +175,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   SHARDANA_SR: {
-    template: { name: 'Amsicora', heroClass: 'SHARDANA', grade: 'SR', maxHp: 180, attack: 38, defense: 8, skillCooldown: 3.5, icon: '⚔️', skillName: 'Furia del Bronzo', desc: 'Leggendario condottiero sardo, scatena colpi fulminei ad altissimo danno critico.', element: 'OSSIDIANA', image: 'amsicora.png' },
+    template: { name: 'Amsicora', heroClass: 'SHARDANA', grade: 'SR', maxHp: 180, attack: 38, defense: 8, skillCooldown: 3.5, icon: '⚔️', skillName: 'Furia del Bronzo', desc: 'Leggendario condottiero sardo, scatena colpi fulminei ad altissimo danno critico.', element: 'OSSIDIANA', image: 'amsicora.png', requiredProfileLevel: 6 },
     lore: {
       title: { en: 'The Legendary Leader of Rebellion', it: 'Il Leggendario Leader della Ribellione' },
       history: {
@@ -184,11 +185,11 @@ export const HEROES: Record<string, HeroEntry> = {
     },
     localized: {
       skillName: { en: 'Bronze Fury', it: 'Furia del Bronzo' },
-      desc: { en: 'Legendary Sardinian leader, unleashes high crit damage lightning strikes.', it: 'Leggendario condottiero sardo, scatena colpi fulminei ad altissimo danno critico.' }
+      desc: { en: 'Legendary Sardinian leader, unleashes high crit damage lightning strikes.', it: 'Legendary condottiero sardo, scatena colpi fulminei ad altissimo danno critico.' }
     }
   },
   GIGANTE_SR: {
-    template: { name: 'Gigante Prama', heroClass: 'GIGANTE', grade: 'SR', maxHp: 320, attack: 28, defense: 15, skillCooldown: 4.8, icon: '🏛️', skillName: 'Pugno Ancestrale', desc: 'Colosso basaltico millenario dagli occhi a cerchio, incassa ingenti danni.', element: 'PIETRA', image: 'gigante_prama.png' },
+    template: { name: 'Gigante Prama', heroClass: 'GIGANTE', grade: 'SR', maxHp: 320, attack: 28, defense: 15, skillCooldown: 4.8, icon: '🏛️', skillName: 'Pugno Ancestrale', desc: 'Colosso basaltico millenario dagli occhi a cerchio, incassa ingenti danni.', element: 'PIETRA', image: 'gigante_prama.png', requiredProfileLevel: 6 },
     lore: {
       title: { en: 'Ancient Basalt Warrior of Mont\'e Prama', it: 'Antico Guerriero Basaltico di Mont\'e Prama' },
       history: {
@@ -202,7 +203,7 @@ export const HEROES: Record<string, HeroEntry> = {
     }
   },
   ACCABADORA_SR: {
-    template: { name: 'Liba', heroClass: 'ACCABADORA', grade: 'SR', maxHp: 150, attack: 40, defense: 6, skillCooldown: 2.8, icon: '🪵', skillName: 'Mazzuolo del Destino', desc: 'L\'Accabadora Suprema, esegue istantaneamente i nemici sotto il 30% di salute.', element: 'VENTO', image: 'liba.png' },
+    template: { name: 'Liba', heroClass: 'ACCABADORA', grade: 'SR', maxHp: 150, attack: 40, defense: 6, skillCooldown: 2.8, icon: '🪵', skillName: 'Mazzuolo del Destino', desc: 'L\'Accabadora Suprema, esegue istantaneamente i nemici sotto il 30% di salute.', element: 'VENTO', image: 'liba.png', requiredProfileLevel: 6 },
     lore: {
       title: { en: 'The Supreme Accabadora', it: 'L\'Accabadora Suprema' },
       history: {

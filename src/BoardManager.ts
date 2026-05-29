@@ -8,8 +8,8 @@ export class BoardManager {
    * Dal Livello 15 in poi: Cappa a un massimo di 50 caselle.
    */
   public static generateBoard(level: number): Cell[] {
-    // Mappe 1-10: corte (20 celle ~10-15 min), mappe 11+: medie (35 celle ~20-30 min)
-    const size = level <= 10 ? 20 : 35;
+    // Formula originale: Livello 1 = 50, crescita +5/livello, cap 100 dal livello 11+
+    const size = Math.min(50 + (level - 1) * 5, 100);
     const board: Cell[] = [];
 
     // Casella 0: Partenza (Pozzo Sacro)

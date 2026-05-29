@@ -13,6 +13,22 @@ const HERO_TEMPLATES: Record<string, HeroTemplate> = Object.fromEntries(
   Object.entries(HEROES).map(([k, v]) => [k, v.template])
 );
 
+const ECONOMY = {
+  PULL_SINGLE: 10,
+  PULL_MULTI: 90,
+  RATE_SR_BASE: 2,
+  RATE_S: 8,
+  RATE_R: 20,
+  RATE_C: 70,
+  PITY_SOFT: 40,        // pull da cui inizia la pity incrementale
+  PITY_SOFT_BONUS: 5,   // % extra SR per ogni pull oltre PITY_SOFT
+  PITY_HARD: 60,        // garantisce SR
+  STAGE_CLEAR_GEMS_BASE: 40,
+  STAGE_CLEAR_GEMS_PER_LVL: 5,
+  STAGE_CLEAR_EXP_BASE: 100,
+  STAGE_CLEAR_EXP_PER_LVL: 50,
+} as const;
+
 const SCENARIOS_LOCALIZED: { id: number; name: Translation; desc: Translation }[] = [
   { id: 1, name: { it: "Tappa 1: Nuraghe Losa", en: "Stage 1: Nuraghe Losa" }, desc: { it: "Il sentiero dei Mamuthones selvaggi", en: "The wild Mamuthones trail" } },
   { id: 2, name: { it: "Tappa 2: Domus de Janas di Sedini", en: "Stage 2: Domus de Janas of Sedini" }, desc: { it: "La dimora delle fate incantate", en: "The enchanted fairies' house" } },
@@ -29,6 +45,46 @@ const SCENARIOS_LOCALIZED: { id: number; name: Translation; desc: Translation }[
   { id: 13, name: { it: "Tappa 13: Tharros antica", en: "Stage 13: Ancient Tharros" }, desc: { it: "Le rovine fenicie lambite dal mare", en: "Phoenician ruins lapped by the sea" } },
   { id: 14, name: { it: "Tappa 14: Barbagia Selvaggia", en: "Stage 14: Wild Barbagia" }, desc: { it: "I sentieri della maschera rituale", en: "The paths of the ritual mask" } },
   { id: 15, name: { it: "Tappa 15+: Tempio di Antas", en: "Stage 15+: Temple of Antas" }, desc: { it: "L'unione eterna con il Sardus Pater", en: "The eternal union with the Sardus Pater" } }
+];
+
+// Dati visivi per i 15 stage — palette placeholder + icona + path immagine finale
+interface StageVisual {
+  icon: string;
+  gradient: string; // CSS linear-gradient
+  accentColor: string;
+}
+
+const STAGE_VISUALS: StageVisual[] = [
+  // 1 Nuraghe Losa — PIETRA
+  { icon: '🏛️', gradient: 'linear-gradient(160deg, #1e1610 0%, #3d2e1a 45%, #6b4e28 100%)', accentColor: '#c8a76b' },
+  // 2 Domus de Janas di Sedini — VENTO/fate
+  { icon: '🧚', gradient: 'linear-gradient(160deg, #1a1010 0%, #5a3520 45%, #9a7040 100%)', accentColor: '#d4956a' },
+  // 3 Tomba dei Giganti di Coddu Vecchiu — PIETRA
+  { icon: '🪨', gradient: 'linear-gradient(160deg, #0d0c0a 0%, #252018 45%, #403828 100%)', accentColor: '#a09070' },
+  // 4 Monte d'Accoddi — OSSIDIANA/sole
+  { icon: '⛩️', gradient: 'linear-gradient(160deg, #1a0c00 0%, #5a2a00 45%, #c85a00 100%)', accentColor: '#e07a20' },
+  // 5 Pozzo Sacro di Santa Cristina — ACQUA/luna
+  { icon: '💧', gradient: 'linear-gradient(160deg, #050818 0%, #0d1e4a 45%, #1a3a8a 100%)', accentColor: '#4a8adb' },
+  // 6 Grotte di Nettuno — ACQUA
+  { icon: '🌊', gradient: 'linear-gradient(160deg, #000e14 0%, #0a3040 45%, #0d6070 100%)', accentColor: '#20b0c0' },
+  // 7 Su Nuraxi di Barumini — PIETRA
+  { icon: '🏰', gradient: 'linear-gradient(160deg, #160e08 0%, #3a2818 45%, #6a4830 100%)', accentColor: '#b07840' },
+  // 8 Foresta di Burgos — VENTO
+  { icon: '🦌', gradient: 'linear-gradient(160deg, #040e06 0%, #0e2a12 45%, #1e4a20 100%)', accentColor: '#4a9a50' },
+  // 9 Dune di Piscinas — VENTO
+  { icon: '🏜️', gradient: 'linear-gradient(160deg, #140c00 0%, #4a3000 45%, #b07800 100%)', accentColor: '#e0b030' },
+  // 10 Altare Rupestre di Santo Stefano — PIETRA
+  { icon: '⚱️', gradient: 'linear-gradient(160deg, #1a0808 0%, #4a1a10 45%, #8a3020 100%)', accentColor: '#c05030' },
+  // 11 Monte Ortobene — VENTO
+  { icon: '⛰️', gradient: 'linear-gradient(160deg, #060c1a 0%, #102040 45%, #1a3a7a 100%)', accentColor: '#3a70c0' },
+  // 12 Is Zuddas — ACQUA/cristalli
+  { icon: '💎', gradient: 'linear-gradient(160deg, #0c0818 0%, #201040 45%, #401870 100%)', accentColor: '#9060d0' },
+  // 13 Tharros antica — ACQUA
+  { icon: '🏺', gradient: 'linear-gradient(160deg, #040810 0%, #0a1a40 45%, #143070 100%)', accentColor: '#2060c0' },
+  // 14 Barbagia Selvaggia — OSSIDIANA
+  { icon: '🎭', gradient: 'linear-gradient(160deg, #080202 0%, #200808 45%, #3a0808 100%)', accentColor: '#a01010' },
+  // 15 Tempio di Antas — OSSIDIANA
+  { icon: '🌿', gradient: 'linear-gradient(160deg, #0a0800 0%, #2a1e00 45%, #504000 100%)', accentColor: '#c0a000' },
 ];
 
 const LOCALIZATION_DICTIONARY: Record<string, Translation> = {
@@ -536,6 +592,7 @@ interface GameWebState {
   equipmentInventory: Equipment[];
   language: 'en' | 'it';
   startingRosterNames: string[]; // I 3 eroi scelti all'avvio della run (ripristinati a ogni morte/fine mappa)
+  pityCounter: number; // pull senza SR (soft pity a 40, hard pity a 60)
 }
 
 const gameState: GameWebState = {
@@ -556,7 +613,8 @@ const gameState: GameWebState = {
     { id: 'eq3', name: 'Scudo di Basalto', type: 'AMULET', statBonus: { def: 5 }, icon: '🛡️' }
   ],
   language: 'it',
-  startingRosterNames: ['Josto', 'Bruncu', 'Caddozzo']
+  startingRosterNames: ['Josto', 'Bruncu', 'Caddozzo'],
+  pityCounter: 0
 };
 
 const GameStorage = {
@@ -579,6 +637,7 @@ const GameStorage = {
         gameState.gems = parsed.gems !== undefined ? parsed.gems : 0;
         gameState.language = parsed.language || 'it';
         gameState.startingRosterNames = parsed.startingRosterNames || ['Josto', 'Bruncu', 'Caddozzo'];
+        gameState.pityCounter = parsed.pityCounter || 0;
 
         if (parsed.team) gameState.team = parsed.team;
         if (parsed.inventory) gameState.inventory = parsed.inventory;
@@ -636,6 +695,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initBoard();
   initTeamSlots();
   initGachaStore();
+  initLandmarkPopup();
   initMerchantAndDecisionListeners();
   updateUI();
   
@@ -838,11 +898,28 @@ function initBoard() {
     el.style.left = `${left}%`;
     el.style.top = `${top}px`;
     
-    // Icona ed ID Casella
-    el.innerHTML = `
-      <span class="cell-num">${cell.id}</span>
-      <span style="font-size: 1.1rem;">${getCellEmoji(cell.type)}</span>
-    `;
+    // Icona ed ID Casella — tenta PNG generato, fallback emoji
+    const numSpan = document.createElement('span');
+    numSpan.className = 'cell-num';
+    numSpan.textContent = String(cell.id);
+    el.appendChild(numSpan);
+
+    const cellImg = document.createElement('img');
+    cellImg.className = 'cell-icon-img';
+    cellImg.src = `assets/art/cells/cell_${cell.type.toLowerCase()}.png`;
+    cellImg.alt = '';
+
+    const cellEmoji = document.createElement('span');
+    cellEmoji.className = 'cell-icon-emoji';
+    cellEmoji.textContent = getCellEmoji(cell.type);
+
+    cellImg.addEventListener('error', () => {
+      cellImg.style.display = 'none';
+      cellEmoji.style.display = 'flex';
+    });
+
+    el.appendChild(cellImg);
+    el.appendChild(cellEmoji);
     
     container.appendChild(el);
   });
@@ -872,6 +949,11 @@ function initBoard() {
     drawBoardPath();
     scrollToPlayer();
   }, 50);
+
+  // Mostra il landmark popup solo all'ingresso di una tappa nuova (posizione 0)
+  if (gameState.playerPosition === 0) {
+    setTimeout(() => showLandmarkPopup(gameState.level), 300);
+  }
 }
 
 // Calcolo matematico della posizione a Serpente scrollabile
@@ -968,12 +1050,12 @@ function drawBoardPath() {
 
 // Centra la telecamera del board container sulla pedina
 function scrollToPlayer() {
-  const container = document.getElementById('board-container');
+  const scrollEl = document.getElementById('serpentine-scroll');
   const token = document.getElementById('player-token');
-  if (container && token) {
+  if (scrollEl && token) {
     const tokenTop = parseFloat(token.style.top);
-    container.scrollTo({
-      top: tokenTop - container.clientHeight / 2,
+    scrollEl.scrollTo({
+      top: tokenTop - scrollEl.clientHeight / 2,
       behavior: 'smooth'
     });
   }
@@ -1134,8 +1216,11 @@ function handleLandingEvent(cell: Cell) {
 
     case 'COMMON_ENEMY':
     case 'ELITE_ENEMY':
-    case 'BOSS':
       startRealTimeCombat(cell.type);
+      break;
+
+    case 'BOSS':
+      openPreBossShop();
       break;
   }
 }
@@ -1158,8 +1243,8 @@ function closePopup() {
     gameState.playerPosition = 0;
 
     // Ricompense globali della meta-progressione!
-    const rewardExp = 100 + oldLevel * 50;
-    const rewardEternalGems = 20 + oldLevel * 5;
+    const rewardExp = ECONOMY.STAGE_CLEAR_EXP_BASE + oldLevel * ECONOMY.STAGE_CLEAR_EXP_PER_LVL;
+    const rewardEternalGems = ECONOMY.STAGE_CLEAR_GEMS_BASE + oldLevel * ECONOMY.STAGE_CLEAR_GEMS_PER_LVL;
 
     const lang = gameState.language || 'it';
     alert(lang === 'it'
@@ -1169,10 +1254,12 @@ function closePopup() {
     // Paga ricompense
     gameState.eternalGems += rewardEternalGems;
 
-    // Resetta la run: riparte con i 3 eroi originali, senza risorse di sessione
+    // Resetta la run: team e inventario azzerati, risorse di sessione a zero
+    // → isExplorationActive diventa false → il giocatore potrà scegliere un roster fresco
     gameState.coins = 0;
     gameState.gems = 0;
-    resetToStartingRoster();
+    gameState.team = [];
+    gameState.inventory = [];
 
     // Verifica Level Up del profilo
     checkForProfileLevelUp(rewardExp);
@@ -1183,7 +1270,7 @@ function closePopup() {
     updateUI();
     GameStorage.save();
 
-    // Ritorna allo schermo Home (mostrerà "RIPRENDI VIAGGIO" con i 3 eroi già pronti)
+    // Ritorna allo schermo Home (mostrerà "INIZIA VIAGGIO" per scegliere un nuovo roster)
     navigateToScreen('screen-home');
   }
 }
@@ -2343,6 +2430,22 @@ function unequipSelectedSlot() {
 function initMerchantAndDecisionListeners() {
   document.getElementById('btn-merchant-close')!.addEventListener('click', () => {
     document.getElementById('popup-merchant')!.classList.remove('active');
+
+    // Ripristina aspetto normale del bottone dopo uso pre-boss
+    const closeBtn = document.getElementById('btn-merchant-close')!;
+    const lang = gameState.language || 'it';
+    closeBtn.innerText = lang === 'it' ? 'Congedati ➔' : 'Leave Shop ➔';
+    closeBtn.style.background = '#52B788';
+    closeBtn.style.color = '#fff';
+
+    // Ripristina titolo merchant normale
+    const titleEl = document.querySelector('#popup-merchant h2') as HTMLElement;
+    if (titleEl) titleEl.innerText = lang === 'it' ? 'Bottega del Shardana' : 'Shardana Shop';
+
+    if (pendingBossCombat) {
+      pendingBossCombat = false;
+      startRealTimeCombat('BOSS');
+    }
   });
   
   document.getElementById('btn-choice-risky')!.addEventListener('click', makeRiskyChoice);
@@ -2590,6 +2693,29 @@ function buyMerchantEquip() {
   GameStorage.save();
 }
 
+function openPreBossShop() {
+  const lang = gameState.language || 'it';
+  pendingBossCombat = true;
+
+  // Riusa il popup merchant con titolo e tasto dedicati
+  const titleEl = document.querySelector('#popup-merchant h2') as HTMLElement;
+  if (titleEl) titleEl.innerText = lang === 'it' ? '⚔️ Preparati alla Battaglia!' : '⚔️ Prepare for Battle!';
+
+  const descEl = document.querySelector('#popup-merchant > div > p') as HTMLElement;
+  if (descEl) descEl.innerText = lang === 'it'
+    ? '"Usa le tue risorse prima dello scontro col Guardiano del Nuraghe!"'
+    : '"Spend your resources before facing the Guardian of the Nuraghe!"';
+
+  const closeBtn = document.getElementById('btn-merchant-close')!;
+  closeBtn.innerText = lang === 'it' ? '⚔️ AFFRONTA IL BOSS →' : '⚔️ FIGHT THE BOSS →';
+  closeBtn.style.background = '#E63946';
+  closeBtn.style.color = '#fff';
+
+  merchantHeroOffers = [];
+  renderMerchantItems();
+  document.getElementById('popup-merchant')!.classList.add('active');
+}
+
 function openDecisionEvent() {
   const lang = gameState.language || 'en';
   const descriptionsEN = [
@@ -2674,6 +2800,58 @@ function makeRiskyChoice() {
   GameStorage.save();
 }
 
+// ─── LANDMARK POPUP ───
+
+function initLandmarkPopup() {
+  document.getElementById('btn-landmark-go')!.addEventListener('click', closeLandmarkPopup);
+  document.getElementById('btn-landmark-skip')!.addEventListener('click', closeLandmarkPopup);
+}
+
+function showLandmarkPopup(level: number) {
+  const lang = gameState.language || 'it';
+  const idx = Math.min(STAGE_VISUALS.length - 1, level - 1);
+  const scenario = SCENARIOS_LOCALIZED[idx];
+  const visual = STAGE_VISUALS[idx];
+
+  // Testi
+  document.getElementById('landmark-badge')!.textContent =
+    lang === 'it' ? `TAPPA ${level}` : `STAGE ${level}`;
+  document.getElementById('landmark-name')!.textContent =
+    lang === 'it' ? scenario.name.it.replace(/^Tappa \d+: /, '') : scenario.name.en.replace(/^Stage \d+: /, '');
+  document.getElementById('landmark-desc')!.textContent =
+    lang === 'it' ? scenario.desc.it : scenario.desc.en;
+  document.getElementById('landmark-icon-large')!.textContent = visual.icon;
+
+  // Stile placeholder
+  const placeholder = document.getElementById('landmark-placeholder')!;
+  placeholder.style.background = visual.gradient;
+  placeholder.classList.remove('hidden');
+
+  // Colore pulsante accento per questo stage
+  const btn = document.getElementById('btn-landmark-go') as HTMLButtonElement;
+  btn.style.background = `linear-gradient(135deg, ${visual.accentColor} 0%, ${visual.accentColor}99 100%)`;
+
+  // Tenta di caricare l'immagine generata; se esiste la mostra, altrimenti placeholder
+  const img = document.getElementById('landmark-img') as HTMLImageElement;
+  img.classList.remove('loaded');
+  const imgPath = `assets/art/stages/stage_${String(level).padStart(2, '0')}.png`;
+  const testImg = new Image();
+  testImg.onload = () => {
+    img.src = imgPath;
+    img.classList.add('loaded');
+    placeholder.classList.add('hidden');
+  };
+  testImg.src = imgPath;
+
+  // Mostra popup
+  const popup = document.getElementById('popup-landmark')!;
+  popup.classList.add('active');
+}
+
+function closeLandmarkPopup() {
+  document.getElementById('popup-landmark')!.classList.remove('active');
+}
+
 // ─── CODICE LA GROTTA DELLE EVOCAZIONI (GACHA STORE) ───
 
 function initGachaStore() {
@@ -2684,8 +2862,8 @@ function initGachaStore() {
 
 async function pullGacha(pullsCount: number) {
   const lang = gameState.language || 'en';
-  const cost = pullsCount === 1 ? 10 : 90;
-  
+  const cost = pullsCount === 1 ? ECONOMY.PULL_SINGLE : ECONOMY.PULL_MULTI;
+
   if (gachaMode === 'SESSION') {
     if (gameState.gems < cost) {
       alert(lang === 'en'
@@ -2729,6 +2907,12 @@ async function pullGacha(pullsCount: number) {
 
   for (let p = 0; p < pullsCount; p++) {
     const grade = rollGachaGrade();
+    // Aggiorna pity: reset su SR, incremento altrimenti
+    if (grade === 'SR') {
+      gameState.pityCounter = 0;
+    } else {
+      gameState.pityCounter += 1;
+    }
     let template: HeroTemplate;
     if (gachaMode === 'SESSION') {
       template = getRandomUnlockedTemplateOfGrade(grade);
@@ -2737,7 +2921,7 @@ async function pullGacha(pullsCount: number) {
     }
     const heroObj = instantiateHero(template);
     pulledHeroes.push(heroObj);
-    
+
     // Aggiorna rarità massima
     if (grade === 'SR') maxGrade = 'SR';
     else if (grade === 'S' && maxGrade !== 'SR') maxGrade = 'S';
@@ -2844,11 +3028,18 @@ async function pullGacha(pullsCount: number) {
 }
 
 function rollGachaGrade(): HeroGrade {
+  // Hard pity: garantisce SR
+  if (gameState.pityCounter >= ECONOMY.PITY_HARD) return 'SR';
+
+  // Soft pity: ogni pull oltre PITY_SOFT aggiunge PITY_SOFT_BONUS% alla probabilità SR
+  const softOverflow = Math.max(0, gameState.pityCounter - ECONOMY.PITY_SOFT + 1);
+  const srRate = ECONOMY.RATE_SR_BASE + softOverflow * ECONOMY.PITY_SOFT_BONUS;
+
   const roll = Math.random() * 100;
-  if (roll < 2) return 'SR';   // 2%
-  if (roll < 10) return 'S';   // 8%
-  if (roll < 30) return 'R';   // 20%
-  return 'C';                 // 70%
+  if (roll < srRate) return 'SR';
+  if (roll < srRate + ECONOMY.RATE_S) return 'S';
+  if (roll < srRate + ECONOMY.RATE_S + ECONOMY.RATE_R) return 'R';
+  return 'C';
 }
 
 function getRandomUnlockedTemplateOfGrade(grade: HeroGrade): HeroTemplate {
@@ -3152,6 +3343,7 @@ let currentBattleTime = 0.0;
 let selectedRosterNames: string[] = [];
 let merchantHeroOffers: { template: HeroTemplate, costCoins: number, costGems: number, bought: boolean }[] = [];
 let pendingEliteRecruitment = false;
+let pendingBossCombat = false;
 
 function checkExplorationStatus() {
   isExplorationActive = gameState.team && gameState.team.length > 0;
@@ -3198,16 +3390,32 @@ function updateGachaViewMode() {
       ? 'Spend in-game Obsidian Gems to temporarily recruit heroes from your unlocked collection.' 
       : 'Spendi Gemme di Ossidiana in-game per reclutare temporaneamente gli eroi dalla tua collezione sbloccata.';
     
-    singleCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 10`;
-    multiCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 90`;
+    singleCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> ${ECONOMY.PULL_SINGLE}`;
+    multiCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> ${ECONOMY.PULL_MULTI}`;
   } else {
     titleEl.innerHTML = lang === 'en' ? 'Ancestors Summon Altar' : 'Tempio degli Antenati';
     descEl.innerHTML = lang === 'en' 
       ? 'Spend Premium Eternal Gems to permanently unlock new mythological heroes based on your profile level.' 
       : 'Spendi Gemme Primordiali per sbloccare permanentemente nuovi eroi mitologici basati sul tuo livello profilo.';
     
-    singleCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> 10`;
-    multiCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> 90`;
+    singleCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> ${ECONOMY.PULL_SINGLE}`;
+    multiCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> ${ECONOMY.PULL_MULTI}`;
+  }
+
+  // Aggiorna barra pity
+  const pityCount = document.getElementById('pity-count');
+  const pityFill = document.getElementById('pity-bar-fill');
+  if (pityCount && pityFill) {
+    const counter = gameState.pityCounter;
+    pityCount.textContent = `${counter}/${ECONOMY.PITY_HARD}`;
+    const pct = Math.min(100, (counter / ECONOMY.PITY_HARD) * 100);
+    pityFill.style.width = `${pct}%`;
+    // Colore giallo oro quando vicino alla pity garantita
+    if (counter >= ECONOMY.PITY_SOFT) {
+      pityFill.style.background = 'linear-gradient(90deg, var(--special), var(--super-rare))';
+    } else {
+      pityFill.style.background = 'linear-gradient(90deg, var(--rare), var(--special), var(--super-rare))';
+    }
   }
 }
 
