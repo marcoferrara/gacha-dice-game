@@ -8,8 +8,8 @@ export class BoardManager {
    * Dal Livello 15 in poi: Cappa a un massimo di 50 caselle.
    */
   public static generateBoard(level: number): Cell[] {
-    // Formula di crescita: Livello 1 = 15, Livello 2 = 18, Livello 3 = 21, ..., Cappa a 50 dal livello 13+ (e quindi sicuramente al 15+)
-    const size = Math.min(15 + (level - 1) * 3, 50);
+    // Mappe 1-10: corte (20 celle ~10-15 min), mappe 11+: medie (35 celle ~20-30 min)
+    const size = level <= 10 ? 20 : 35;
     const board: Cell[] = [];
 
     // Casella 0: Partenza (Pozzo Sacro)
@@ -60,13 +60,17 @@ export class BoardManager {
         type = 'TEMPLE';
         name = 'Tempio Sacro: Acqua Benedetta di Fonte Janas 🩹';
         value = 25; // Cura il 25% degli HP
-      } else if (rand < 0.87) {
+      } else if (rand < 0.82) {
         type = 'MERCHANT';
         name = 'Bottega Sarda: Il Mercante Shardana 🛒';
         value = 0;
-      } else {
+      } else if (rand < 0.90) {
         type = 'DECISION';
         name = 'Incontro Misterioso: Scelta del Destino 🔮';
+        value = 0;
+      } else {
+        type = 'ACCAMPAMENTO';
+        name = 'Accampamento Sardo: Guerrieri in Cerca di Compagni ⛺';
         value = 0;
       }
 

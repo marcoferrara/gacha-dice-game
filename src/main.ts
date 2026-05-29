@@ -1,6 +1,6 @@
 import { BoardManager } from './BoardManager';
 import { CombatEngine } from './CombatEngine';
-import { Hero, Cell, GameState, HeroClass, HeroGrade, ElementType, Equipment, CellType, EnemyType } from './types';
+import { Hero, Cell, GameState, HeroClass, HeroGrade, ElementType, Equipment, CellType, EnemyType, Enemy } from './types';
 import { AudioSynth } from './AudioSynth';
 import { HEROES, HEROES_BY_NAME, HeroTemplate, HeroEntry, Translation } from './data/heroes';
 
@@ -38,12 +38,35 @@ const LOCALIZATION_DICTIONARY: Record<string, Translation> = {
   'btn-toggle-frame': { en: "Fullscreen", it: "Schermo Intero" },
   'btn-toggle-lang': { en: "🇬🇧", it: "🇮🇹" },
   
+  // Home Screen
+  'nav-lbl-home': { en: "Home", it: "Home" },
+  'ui-profile-name': { en: "Sardinian Explorer", it: "Viaggiatore Sardo" },
+  'lbl-adventure-title': { en: "CURRENT EXPLORATION", it: "ESPLORAZIONE ATTUALE" },
+  'lbl-starter-deck-header': { en: "STARTING TEAM (STARTER DECK)", it: "SQUADRA DI PARTENZA (STARTER DECK)" },
+  'lbl-premium-shop-desc': { en: "Trade obsidian for premium Eternal Gems or purchase Sandbox Packs.", it: "Scambia Ossidiana per Gemme Primordiali o acquista pacchetti Premium." },
+  'lbl-btn-open-premium-shop': { en: "OPEN SHOP 🛒", it: "APRI SHOP 🛒" },
+  'lbl-btn-start-adventure': { en: "START VIAGGIO ➔", it: "INIZIA VIAGGIO ➔" },
+  'lbl-home-summon-shortcut-title': { en: "SUMMONING ALTAR", it: "ALTARE DELLE EVOCAZIONI" },
+  'lbl-home-summon-shortcut-desc': { en: "Permanently summon and expand your collection of mythological heroes.", it: "Evoca ed espandi permanentemente la tua collezione di eroi mitologici." },
+  'lbl-btn-home-go-to-altar': { en: "SUMMON ALTAR ➔", it: "ALTARE DI EVOCAZIONE ➔" },
+  'lbl-roster-select-title': { en: "Starting Roster ⚔️", it: "Roster di Partenza ⚔️" },
+  'lbl-roster-select-subtitle': { en: "Choose 3 permanently unlocked heroes to start your journey.", it: "Scegli 3 eroi sbloccati permanentemente per iniziare il viaggio." },
+  
+  // Premium Shop Modal
+  'lbl-premium-shop-title': { en: "Temple of Gems 🔮", it: "Bottega delle Gemme 🔮" },
+  'lbl-premium-shop-subtitle': { en: "Acquire premium Eternal Gems to permanently awaken and expand your mythological Codex!", it: "Acquista Gemme Primordiali per evocare ed espandere permanentemente la tua collezione!" },
+  'lbl-exchange-header': { en: "In-Game Obsidian Trade", it: "Scambio Ossidiana In-Game" },
+  'lbl-exchange-desc': { en: "Convert 100 in-game Obsidian to obtain 10 Eternal Gems", it: "Converti 100 Ossidiane in-game per ottenere 10 Gemme Primordiali" },
+
   // Board Screen
   'nav-lbl-board': { en: "Board", it: "Tavola" },
   'dice-img': { en: "Roll Dice", it: "Lancia Dado" },
   
   // Combat Screen
   'screen-combat-title': { en: "REAL-TIME COMBAT", it: "SCONTRO IN TEMPO REALE" },
+  'btn-auto-on': { en: "AUTO: ON 🤖", it: "AUTO: SI 🤖" },
+  'btn-auto-off': { en: "AUTO: OFF 🤖", it: "AUTO: NO 🤖" },
+  'lbl-skill-ready': { en: "TAP ⚡", it: "PRONTO ⚡" },
   
   // Team Screen
   'nav-lbl-team': { en: "Team", it: "Squadra" },
@@ -60,8 +83,8 @@ const LOCALIZATION_DICTIONARY: Record<string, Translation> = {
   'lbl-codex-progress': { en: "UNLOCKED COLLECTION: ", it: "COLLEZIONE SBLOCCATA: " },
   
   // Summon (Gacha) Screen
-  'nav-lbl-gacha': { en: "Summon", it: "Tempio" },
-  'gacha-banner-title': { en: "Summoning Temple", it: "Tempio delle Evocazioni" },
+  'nav-lbl-gacha': { en: "Summon", it: "Altare" },
+  'gacha-banner-title': { en: "Summoning Altar", it: "Altare delle Evocazioni" },
   'gacha-banner-desc': { en: "Spend gems to awaken ancient Sardinian warriors", it: "Spendi le gemme per risvegliare antichi guerrieri sardi" },
   'gacha-rates-title': { en: "SUMMONING PROBABILITIES", it: "PROBABILITÀ DI EVOCAZIONE" },
   
@@ -497,6 +520,13 @@ class ParticleManager {
 // ─── STATO DI GIOCO ───
 
 interface GameWebState {
+  // Meta-progressione permanente (fuori dalla mappa)
+  profileLevel: number;
+  profileExp: number;
+  eternalGems: number;
+  unlockedCollection: string[]; // Nomi degli eroi sbloccati permanentemente
+
+  // Sessione di gioco attuale (Mappa attuale)
   level: number;
   playerPosition: number;
   coins: number;
@@ -505,32 +535,28 @@ interface GameWebState {
   inventory: Hero[];
   equipmentInventory: Equipment[];
   language: 'en' | 'it';
-  unlockedCollection: string[];
+  startingRosterNames: string[]; // I 3 eroi scelti all'avvio della run (ripristinati a ogni morte/fine mappa)
 }
 
 const gameState: GameWebState = {
+  profileLevel: 1,
+  profileExp: 0,
+  eternalGems: 80, // Abbastanza per 8 evocazioni o IAP di prova immediati
+  unlockedCollection: ['Josto', 'Bruncu', 'Caddozzo'], // Starter Deck base
+
   level: 1,
   playerPosition: 0,
-  coins: 1500, // Dotazione iniziale ricca per consentire il test immediato di level up
-  gems: 80,    // Dotazione iniziale per consentire 8 pull o quasi una multi 10x immediata
-  team: [
-    instantiateHero(HERO_TEMPLATES.SHARDANA_SR),
-    instantiateHero(HERO_TEMPLATES.JANA_S),
-    instantiateHero(HERO_TEMPLATES.GIGANTE_R),
-    instantiateHero(HERO_TEMPLATES.ACCABADORA_S),
-    instantiateHero(HERO_TEMPLATES.SHARDANA_C)
-  ],
-  inventory: [
-    instantiateHero(HERO_TEMPLATES.ACCABADORA_C),
-    instantiateHero(HERO_TEMPLATES.GIGANTE_C)
-  ],
+  coins: 0, // Inizia a 0 prima di entrare in mappa
+  gems: 0,  // Inizia a 0 prima di entrare in mappa
+  team: [],
+  inventory: [],
   equipmentInventory: [
     { id: 'eq1', name: 'Spada di Bronzo Shardana', type: 'WEAPON', statBonus: { atk: 15 }, icon: '⚔️' },
     { id: 'eq2', name: 'Pendente Nuragico Sacro', type: 'AMULET', statBonus: { hp: 80 }, icon: '📿' },
     { id: 'eq3', name: 'Scudo di Basalto', type: 'AMULET', statBonus: { def: 5 }, icon: '🛡️' }
   ],
-  language: 'en',
-  unlockedCollection: []
+  language: 'it',
+  startingRosterNames: ['Josto', 'Bruncu', 'Caddozzo']
 };
 
 const GameStorage = {
@@ -542,18 +568,23 @@ const GameStorage = {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
+        gameState.profileLevel = parsed.profileLevel || 1;
+        gameState.profileExp = parsed.profileExp || 0;
+        gameState.eternalGems = parsed.eternalGems !== undefined ? parsed.eternalGems : 80;
+        gameState.unlockedCollection = parsed.unlockedCollection || ['Josto', 'Bruncu', 'Caddozzo'];
+
         gameState.level = parsed.level || 1;
         gameState.playerPosition = parsed.playerPosition || 0;
-        gameState.coins = parsed.coins !== undefined ? parsed.coins : 100;
-        gameState.gems = parsed.gems !== undefined ? parsed.gems : 10;
-        gameState.language = parsed.language || 'en';
-        gameState.unlockedCollection = parsed.unlockedCollection || [];
-        
+        gameState.coins = parsed.coins !== undefined ? parsed.coins : 0;
+        gameState.gems = parsed.gems !== undefined ? parsed.gems : 0;
+        gameState.language = parsed.language || 'it';
+        gameState.startingRosterNames = parsed.startingRosterNames || ['Josto', 'Bruncu', 'Caddozzo'];
+
         if (parsed.team) gameState.team = parsed.team;
         if (parsed.inventory) gameState.inventory = parsed.inventory;
         if (parsed.equipmentInventory) gameState.equipmentInventory = parsed.equipmentInventory;
 
-        // Auto-unlock migration: sblocca nel Codex tutti gli eroi attualmente posseduti
+        // Auto-unlock migration per gli eroi posseduti nel salvataggio
         const currentHeroNames = [
           ...gameState.team.map(h => h.name),
           ...gameState.inventory.map(h => h.name)
@@ -569,12 +600,9 @@ const GameStorage = {
     } catch (e) {
       console.error('Errore nel caricamento del salvataggio:', e);
     }
-    // Per un nuovo gioco, sblocca comunque gli eroi iniziali di default
-    const initialHeroNames = [
-      ...gameState.team.map(h => h.name),
-      ...gameState.inventory.map(h => h.name)
-    ];
-    initialHeroNames.forEach(name => {
+    // Per un nuovo gioco, garantisce gli eroi di default sbloccati
+    const defaultUnlocks = ['Josto', 'Bruncu', 'Caddozzo'];
+    defaultUnlocks.forEach(name => {
       if (!gameState.unlockedCollection.includes(name)) {
         gameState.unlockedCollection.push(name);
       }
@@ -635,6 +663,25 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('slot-weapon')!.addEventListener('click', () => openEquipSelect('WEAPON'));
   document.getElementById('slot-amulet')!.addEventListener('click', () => openEquipSelect('AMULET'));
 
+  // Event Listeners per Schermata Home & Shop Premium
+  document.getElementById('btn-start-adventure')!.addEventListener('click', startOrResumeExplorationRun);
+  document.getElementById('btn-open-premium-shop')!.addEventListener('click', () => {
+    document.getElementById('popup-premium-shop')!.classList.add('active');
+  });
+  document.getElementById('btn-close-premium-shop')!.addEventListener('click', () => {
+    document.getElementById('popup-premium-shop')!.classList.remove('active');
+  });
+  document.getElementById('btn-convert-gems')!.addEventListener('click', convertExplorationGems);
+
+  // Finti pulsanti acquisto pacchetti IAP
+  document.querySelectorAll('.premium-pack-item').forEach(pack => {
+    pack.addEventListener('click', () => {
+      const gemsVal = parseInt(pack.getAttribute('data-gems')!);
+      const priceVal = parseFloat(pack.getAttribute('data-price')!);
+      buyPremiumPack(gemsVal, priceVal);
+    });
+  });
+
   // Inizializza Gestore Particelle Canvas
   ParticleManager.init();
 
@@ -668,6 +715,16 @@ window.addEventListener('DOMContentLoaded', () => {
     AudioSynth.playLevelUp();
   });
 
+  // Gestione pulsante Auto-Combat
+  const btnAuto = document.getElementById('btn-toggle-auto-combat');
+  if (btnAuto) {
+    btnAuto.addEventListener('click', () => {
+      isAutoCombat = !isAutoCombat;
+      updateAutoCombatButtonUI();
+      AudioSynth.playLevelUp();
+    });
+  }
+
   // Chiusura Modale Lore Codex
   document.getElementById('btn-close-codex-lore')!.addEventListener('click', () => {
     document.getElementById('popup-codex-lore')!.classList.remove('active');
@@ -675,6 +732,27 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-close-lore-confirm')!.addEventListener('click', () => {
     document.getElementById('popup-codex-lore')!.classList.remove('active');
   });
+
+  // Pulsante Home per andare all'Altare
+  document.getElementById('btn-home-go-to-altar')!.addEventListener('click', () => {
+    lastScreenBeforeGacha = 'screen-home';
+    updateGachaViewMode();
+    navigateToScreen('screen-gacha');
+    AudioSynth.playLevelUp();
+  });
+
+  // Chiusura Roster Selector Popup
+  document.getElementById('btn-close-roster-select')!.addEventListener('click', () => {
+    document.getElementById('popup-roster-select')!.classList.remove('active');
+  });
+
+  // Chiusura Popup Reclutamento (Accampamento / Elite Reward)
+  document.getElementById('btn-recruit-close')!.addEventListener('click', () => {
+    document.getElementById('popup-recruit')!.classList.remove('active');
+  });
+
+  // Conferma Roster Selector Popup
+  document.getElementById('btn-roster-confirm')!.addEventListener('click', confirmStartingRosterAndStart);
 
   // Applica traduzioni all'avvio
   applyTranslations();
@@ -692,14 +770,31 @@ function initClock() {
 }
 
 // Navigazione tra le tab dello smartphone
+let lastScreenBeforeGacha = 'screen-home';
+
 function initNavigation() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) {
+        const lang = gameState.language || 'it';
+        alert(lang === 'it' 
+          ? "Devi iniziare un viaggio dalla Home prima di accedere alla Mappa (Board) o alla Squadra!" 
+          : "You must start an exploration from Home before accessing the Map Board or session Team!");
+        return;
+      }
+      
+      const targetScreen = btn.getAttribute('data-screen')!;
+      
+      // Salva l'ultimo schermo visitato per determinare la modalità Gacha
+      const currentActive = document.querySelector('.screen.active');
+      if (currentActive && currentActive.id !== 'screen-gacha') {
+        lastScreenBeforeGacha = currentActive.id;
+      }
+
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       
       btn.classList.add('active');
-      const targetScreen = btn.getAttribute('data-screen')!;
       document.getElementById(targetScreen)!.classList.add('active');
       
       // Se torniamo alla tavola, ri-centra la telecamera sul giocatore
@@ -710,6 +805,11 @@ function initNavigation() {
       // Se andiamo al codex, rigenera la griglia
       if (targetScreen === 'screen-codex') {
         renderCodexGrid();
+      }
+
+      // Se andiamo alla tab summon, aggiorna la vista
+      if (targetScreen === 'screen-gacha') {
+        updateGachaViewMode();
       }
     });
   });
@@ -797,6 +897,7 @@ function getCellEmoji(type: CellType) {
     case 'BOSS': return '🔱';
     case 'MERCHANT': return '🛒';
     case 'DECISION': return '🔮';
+    case 'ACCAMPAMENTO': return '⛺';
     default: return '📍';
   }
 }
@@ -1027,6 +1128,10 @@ function handleLandingEvent(cell: Cell) {
       openDecisionEvent();
       break;
 
+    case 'ACCAMPAMENTO':
+      openRecruitmentPopup('ACCAMPAMENTO');
+      break;
+
     case 'COMMON_ENEMY':
     case 'ELITE_ENEMY':
     case 'BOSS':
@@ -1037,25 +1142,49 @@ function handleLandingEvent(cell: Cell) {
 
 function closePopup() {
   document.getElementById('popup-event')!.classList.remove('active');
-  
+
+  // Dopo vittoria Elite: mostra reclutamento prima di tornare alla mappa
+  if (pendingEliteRecruitment) {
+    pendingEliteRecruitment = false;
+    openRecruitmentPopup('ELITE');
+    return;
+  }
+
   // Se abbiamo superato l'ultima casella ed il Boss è morto: Vittoria Livello!
   const finalCell = board[gameState.playerPosition];
   if (gameState.playerPosition === board.length - 1 && finalCell && finalCell.type === 'BOSS' && (finalCell as any).defeated) {
     const oldLevel = gameState.level;
     gameState.level += 1;
     gameState.playerPosition = 0;
-    
-    // Ricompensa di transizione
-    const completionGold = 1000 + (oldLevel * 300);
-    const completionGems = 50 + (oldLevel * 10);
-    gameState.coins += completionGold;
-    gameState.gems += completionGems;
-    
-    alert(`🏆 TAPPA ${oldLevel} SUPERATA!\nHai sconfitto il Guardiano ed evocato le divinità!\n\nRicevi:\n🪙 +${completionGold} Monete\n💎 +${completionGems} Gemme`);
-    
+
+    // Ricompense globali della meta-progressione!
+    const rewardExp = 100 + oldLevel * 50;
+    const rewardEternalGems = 20 + oldLevel * 5;
+
+    const lang = gameState.language || 'it';
+    alert(lang === 'it'
+      ? `🏆 TAPPA ${oldLevel} SUPERATA!\nHai sconfitto il Guardiano del Nuraghe ed evocato le antiche divinità sarde!\n\nRicevi:\n🔮 +${rewardEternalGems} Gemme Primordiali (Permanenti)\n⭐ +${rewardExp} EXP Profilo\n\nLa nuova mappa inizia con i tuoi 3 guerrieri originali.`
+      : `🏆 STAGE ${oldLevel} CLEARED!\nYou defeated the Nuraghe Guardian and awakened the ancient Sardinian deities!\n\nEarned:\n🔮 +${rewardEternalGems} Eternal Gems (Permanent)\n⭐ +${rewardExp} Profile EXP\n\nThe new map starts with your original 3 warriors.`);
+
+    // Paga ricompense
+    gameState.eternalGems += rewardEternalGems;
+
+    // Resetta la run: riparte con i 3 eroi originali, senza risorse di sessione
+    gameState.coins = 0;
+    gameState.gems = 0;
+    resetToStartingRoster();
+
+    // Verifica Level Up del profilo
+    checkForProfileLevelUp(rewardExp);
+
+    // Inizializza per il livello successivo ed aggiorna UI
     initBoard();
+    initTeamSlots();
     updateUI();
     GameStorage.save();
+
+    // Ritorna allo schermo Home (mostrerà "RIPRENDI VIAGGIO" con i 3 eroi già pronti)
+    navigateToScreen('screen-home');
   }
 }
 
@@ -1091,6 +1220,8 @@ function startRealTimeCombat(cellType: CellType) {
   }
 
   const enemy = CombatEngine.spawnEnemy(gameState.level, enemyType);
+  activeEnemy = enemy;
+  updateAutoCombatButtonUI();
   const enemyElemEmoji = getElementEmoji(enemy.element);
 
   enemyName.innerText = `${enemy.name} ${enemyElemEmoji} (LIV. ${gameState.level})`;
@@ -1149,6 +1280,7 @@ function startRealTimeCombat(cellType: CellType) {
   combatInterval = window.setInterval(() => {
     ticks++;
     const battleTime = parseFloat((ticks * 0.1).toFixed(1));
+    currentBattleTime = battleTime; // Aggiorna riferimento globale
     timerEl.innerText = `${battleTime}s`;
 
     // 1. Carica le abilità speciali degli eroi (evocazione/casting)
@@ -1157,93 +1289,26 @@ function startRealTimeCombat(cellType: CellType) {
       
       const skillBar = document.getElementById(`skill-bar-${hero.name.replace(/\s+/g, '')}`);
       if (skillBar) {
+        if (hero.skillReady) {
+          skillBar.style.width = '100%';
+          skillBar.classList.add('ready');
+          return;
+        }
+
         hero.skillTimer = parseFloat((hero.skillTimer + tickRate).toFixed(1));
         const percentage = Math.min(100, (hero.skillTimer / hero.skillCooldown) * 100);
         skillBar.style.width = `${percentage}%`;
         
         if (percentage >= 100) {
+          hero.skillReady = true;
           skillBar.classList.add('ready');
           
-          // Esegui abilità speciale con CombatEngine!
-          const combatLog: string[] = [];
-          CombatEngine.castHeroSkill(hero, gameState.team, enemy, battleTime, combatLog);
-          
-          combatLog.forEach(l => {
-            const isHeal = l.includes('SOFFIO DI DOMUS') || l.includes('lancia Soffio di Domus');
-            const isCrit = l.includes('Colpo di spada mitico') || l.includes('Esecuzione letale');
-            const elemAdv = l.includes('Vantaggio Elementale');
-            const elemDis = l.includes('Svantaggio Elementale');
-
-            const row = document.getElementById(`row-${hero.name.replace(/\s+/g, '')}`);
-            if (row) {
-              row.style.borderColor = 'var(--gold)';
-              setTimeout(() => row.style.borderColor = 'var(--gold-border)', 300);
-              
-              // Animazione Claymation: Attacco Speciale Eroe
-              const img = row.querySelector('.avatar-image');
-              if (img) {
-                img.classList.add('avatar-attack-left');
-                setTimeout(() => img.classList.remove('avatar-attack-left'), 500);
-              }
-            }
-            if (isHeal) {
-              gameState.team.forEach(h => {
-                if (h.currentHp > 0) {
-                  const healVal = Math.round(hero.attack * 2.0 * (synergies.healMultiplier));
-                  spawnFloatingDamage(healVal.toString(), false, document.getElementById(`row-${h.name.replace(/\s+/g, '')}`), false, true);
-                  
-                  // Animazione guarigione: flash o leggero sobbalzo
-                  const hRow = document.getElementById(`row-${h.name.replace(/\s+/g, '')}`);
-                  if (hRow) {
-                    const hImg = hRow.querySelector('.avatar-image');
-                    if (hImg) {
-                      hImg.classList.add('avatar-idle');
-                    }
-                  }
-                }
-              });
-              addCombatLog(l, 'text-success');
-            } else {
-              const isExec = l.includes('Esecuzione letale') || l.includes('letale');
-              const dmgVal = Math.max(5, Math.round(hero.attack * (isExec ? 5.5 : (l.includes('COLPO DI GRAZIA') || l.includes('Colpo di Grazia') ? 2.0 : 3.5)) - enemy.defense));
-              const elemMult = CombatEngine.getElementalMultiplier(hero.element || 'VENTO', enemy.element || 'VENTO');
-              const finalDmg = Math.round(dmgVal * elemMult);
-
-              if (isCrit || elemAdv) {
-                AudioSynth.playCritHit();
-                const enemyVisual = document.querySelector('.enemy-visual') as HTMLElement;
-                const canvasEl = document.getElementById('particle-canvas');
-                if (enemyVisual && canvasEl) {
-                  const rect = enemyVisual.getBoundingClientRect();
-                  const canvasRect = canvasEl.getBoundingClientRect();
-                  const x = rect.left - canvasRect.left + rect.width / 2;
-                  const y = rect.top - canvasRect.top + rect.height / 2;
-                  ParticleManager.spawnExplosion(x, y, isCrit ? '#fbb6ce' : '#ffd700', isCrit ? 20 : 12);
-                }
-              }
-
-              // Animazione Claymation: Nemico colpito o abbattuto
-              const enemyAvatarEl = document.getElementById('enemy-avatar');
-              if (enemyAvatarEl) {
-                const img = enemyAvatarEl.querySelector('.avatar-image');
-                if (img) {
-                  if (enemy.currentHp <= 0) {
-                    img.classList.add('avatar-dead');
-                  } else {
-                    img.classList.add('avatar-hit');
-                    setTimeout(() => img.classList.remove('avatar-hit'), 500);
-                  }
-                }
-              }
-
-              spawnFloatingDamage(finalDmg.toString(), false, document.querySelector('.enemy-visual'), isCrit || elemAdv, false);
-              addCombatLog(l, l.includes('SCUDO CONCENTRICO') || l.includes('Scudo Concentrico') ? 'text-purple' : 'text-gold');
-            }
-          });
-          
-          hero.skillTimer = 0;
-          skillBar.classList.remove('ready');
-          renderCombatTeamGrid();
+          if (isAutoCombat) {
+            executeActiveHeroSkill(hero);
+          } else {
+            // Modalità Manuale: re-renderizza la griglia per attivare i click e mostrare i bagliori
+            renderCombatTeamGrid();
+          }
         }
       }
     });
@@ -1451,16 +1516,29 @@ function renderCombatTeamGrid() {
 
   gameState.team.forEach(hero => {
     const row = document.createElement('div');
-    row.className = `combat-hero-row ${hero.currentHp <= 0 ? 'dead' : ''}`;
     row.id = `row-${hero.name.replace(/\s+/g, '')}`;
     row.style.borderLeftColor = GRADE_BORDER_COLOR[hero.grade] || '#8e9aa6';
 
     const hpPct = Math.max(0, (hero.currentHp / hero.maxHp) * 100);
     const hpColor = hero.currentHp <= 0 ? '#444' : getHpBarColor(hpPct);
     const elemEmoji = getElementEmoji(hero.element);
+    
+    // Calcola il riempimento corrente della barra abilità
+    const skillPct = hero.skillReady ? 100 : Math.min(100, ((hero.skillTimer || 0) / (hero.skillCooldown || 3)) * 100);
+
+    // Classi CSS condizionali
+    let rowClasses = 'combat-hero-row';
+    if (hero.currentHp <= 0) {
+      rowClasses += ' dead';
+    } else if (hero.skillReady) {
+      rowClasses += ' ready-to-cast clickable';
+    }
+    row.className = rowClasses;
 
     row.innerHTML = `
-      <div class="ch-avatar-wrap" style="border-color: ${GRADE_BORDER_COLOR[hero.grade] || 'var(--gold)'}; display: flex; align-items: center; justify-content: center; position: relative; overflow: visible;">${getHeroAvatarHtml(hero, hero.currentHp > 0, 'compact')}</div>
+      <div class="ch-avatar-wrap" style="border-color: ${GRADE_BORDER_COLOR[hero.grade] || 'var(--gold)'}; display: flex; align-items: center; justify-content: center; position: relative; overflow: visible;">
+        ${getHeroAvatarHtml(hero, hero.currentHp > 0, 'compact')}
+      </div>
       <div class="ch-info">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
           <span class="ch-name">${hero.name} ${elemEmoji}</span>
@@ -1470,10 +1548,18 @@ function renderCombatTeamGrid() {
           <div class="ch-hp-bar" style="width: ${hpPct}%; background-color: ${hpColor};"></div>
         </div>
         <div class="ch-skill-bar-wrapper">
-          <div class="ch-skill-bar" id="skill-bar-${hero.name.replace(/\s+/g, '')}"></div>
+          <div class="ch-skill-bar ${hero.skillReady ? 'ready' : ''}" id="skill-bar-${hero.name.replace(/\s+/g, '')}" style="width: ${skillPct}%;"></div>
         </div>
       </div>
+      ${hero.skillReady && hero.currentHp > 0 ? `<div class="skill-ready-indicator">${gameState.language === 'it' ? 'PRONTO ⚡' : 'TAP ⚡'}</div>` : ''}
     `;
+
+    // Attacca il listener del click se la skill è pronta ed il personaggio è vivo
+    if (hero.skillReady && hero.currentHp > 0) {
+      row.addEventListener('click', () => {
+        executeActiveHeroSkill(hero);
+      });
+    }
 
     grid.appendChild(row);
   });
@@ -1515,6 +1601,8 @@ function spawnFloatingDamage(value: string, isToHero: boolean, targetElement: HT
 
 function endCombat(victory: boolean, cellType: CellType) {
   if (combatInterval) clearInterval(combatInterval);
+  activeEnemy = null;
+  currentBattleTime = 0.0;
 
   // Ritorna allo schermo della tavola ed all'audio rilassante
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1546,6 +1634,7 @@ function endCombat(victory: boolean, cellType: CellType) {
     if (cellType === 'ELITE_ENEMY') {
       baseCoins = 400;
       baseGems = 15;
+      pendingEliteRecruitment = true; // Dopo la chiusura del popup, offre un eroe gratuito
     } else if (cellType === 'BOSS') {
       baseCoins = 1000;
       baseGems = 50;
@@ -1557,19 +1646,31 @@ function endCombat(victory: boolean, cellType: CellType) {
     gameState.coins += rewardCoins;
     gameState.gems += rewardGems;
 
-    title.innerText = 'Vittoria Epica!';
+    const lang = gameState.language || 'it';
+    title.innerText = lang === 'it' ? 'Vittoria Epica!' : 'Epic Victory!';
     icon.innerText = '🏆';
-    desc.innerText = `Hai sconfitto i Mamuthones selvaggi! Ricevi +${rewardCoins} Monete 🪙 e +${rewardGems} Gemme 💎!`;
+    const eliteHint = cellType === 'ELITE_ENEMY'
+      ? (lang === 'it' ? '\n\n⛺ Un guerriero vuole unirsi a voi...' : '\n\n⛺ A warrior wants to join you...')
+      : '';
+    desc.innerText = (lang === 'it'
+      ? `Hai sconfitto i Mamuthones selvaggi! Ricevi +${rewardCoins} Monete 🪙 e +${rewardGems} Gemme 💎!`
+      : `You defeated the wild Mamuthones! Received +${rewardCoins} Coins 🪙 and +${rewardGems} Gems 💎!`) + eliteHint;
     overlay.classList.add('active');
-    
+
     updateUI();
     GameStorage.save();
   } else {
-    alert("💀 LA SQUADRA È CADUTA!\nVerrai teletrasportato all'inizio del sentiero per ricaricare le forze.");
-    // Resetta HP
-    gameState.team.forEach(h => h.currentHp = h.maxHp);
+    const lang = gameState.language || 'it';
+    alert(lang === 'it'
+      ? '💀 LA SQUADRA È CADUTA!\nLa run ricomincia dall\'inizio con i tuoi 3 guerrieri originali. Monete e gemme di sessione azzerate.'
+      : '💀 YOUR TEAM HAS FALLEN!\nThe run restarts from the beginning with your original 3 warriors. Session coins and gems reset.');
+    // Roguelite duro: riparte da casella 0 con il roster iniziale, risorse azzerate
+    resetToStartingRoster();
     gameState.playerPosition = 0;
+    gameState.coins = 0;
+    gameState.gems = 0;
     updatePlayerTokenPosition(0);
+    initTeamSlots();
     setTimeout(scrollToPlayer, 150);
     updateUI();
     GameStorage.save();
@@ -2249,6 +2350,39 @@ function initMerchantAndDecisionListeners() {
 }
 
 function openMerchantShop() {
+  merchantHeroOffers = [];
+  const lang = gameState.language || 'it';
+  
+  // Filtra tutti i template eroe sbloccati nella collezione permanente
+  const eligibleTemplates = Object.values(HERO_TEMPLATES).filter(t => gameState.unlockedCollection.includes(t.name));
+  
+  // Mescola e prende al massimo 3 eroi unici
+  const shuffled = [...eligibleTemplates].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 3);
+  
+  selected.forEach(t => {
+    let costCoins = 250;
+    let costGems = 15;
+    
+    if (t.grade === 'R') {
+      costCoins = 450;
+      costGems = 30;
+    } else if (t.grade === 'S') {
+      costCoins = 800;
+      costGems = 55;
+    } else if (t.grade === 'SR') {
+      costCoins = 1200;
+      costGems = 90;
+    }
+    
+    merchantHeroOffers.push({
+      template: t,
+      costCoins,
+      costGems,
+      bought: false
+    });
+  });
+  
   renderMerchantItems();
   document.getElementById('popup-merchant')!.classList.add('active');
 }
@@ -2257,77 +2391,160 @@ function renderMerchantItems() {
   const container = document.getElementById('merchant-items')!;
   container.innerHTML = '';
   
-  // Offerta 1: Evocazione casuale
-  const item1 = document.createElement('div');
-  item1.className = 'currency-item';
-  item1.style.justifyContent = 'space-between';
-  item1.style.padding = '0.6rem';
-  item1.innerHTML = `
-    <div style="text-align: left;">
-      <span style="font-weight: 700; color: #fff; font-size: 0.72rem;">Risveglio Casuale (C-R)</span>
-      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Sblocca un eroe in inventario</p>
-    </div>
-    <button class="btn-popup-close" id="btn-buy-hero" style="background: var(--gold); color: #000; font-size: 0.65rem; padding: 0.3rem 0.6rem;">🪙 400</button>
-  `;
-  
-  // Offerta 2: Gemme
-  const item2 = document.createElement('div');
-  item2.className = 'currency-item';
-  item2.style.justifyContent = 'space-between';
-  item2.style.padding = '0.6rem';
-  item2.innerHTML = `
-    <div style="text-align: left;">
-      <span style="font-weight: 700; color: #fff; font-size: 0.72rem;">Ossidiana Vulcanica (+15 💎)</span>
-      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Acquista minerali per evocare eroi</p>
-    </div>
-    <button class="btn-popup-close" id="btn-buy-gems" style="background: var(--gold); color: #000; font-size: 0.65rem; padding: 0.3rem 0.6rem;">🪙 350</button>
-  `;
-
-  // Offerta 3: Bronzetto Casuale
-  const item3 = document.createElement('div');
-  item3.className = 'currency-item';
-  item3.style.justifyContent = 'space-between';
-  item3.style.padding = '0.6rem';
-  item3.innerHTML = `
+  // 1. Offerta Bronzetto Casuale (Equipaggiamento)
+  const itemEquip = document.createElement('div');
+  itemEquip.className = 'currency-item';
+  itemEquip.style.justifyContent = 'space-between';
+  itemEquip.style.padding = '0.6rem';
+  itemEquip.innerHTML = `
     <div style="text-align: left;">
       <span style="font-weight: 700; color: #fff; font-size: 0.72rem;">Bronzetto Casuale</span>
-      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Ricevi un'arma o un amuleto di bronzo</p>
+      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Arma o amuleto di bronzo rituale</p>
     </div>
     <button class="btn-popup-close" id="btn-buy-equip" style="background: var(--gold); color: #000; font-size: 0.65rem; padding: 0.3rem 0.6rem;">🪙 600</button>
   `;
-
-  container.appendChild(item1);
-  container.appendChild(item2);
-  container.appendChild(item3);
-  
-  document.getElementById('btn-buy-hero')!.addEventListener('click', buyMerchantHero);
-  document.getElementById('btn-buy-gems')!.addEventListener('click', buyMerchantGems);
+  container.appendChild(itemEquip);
   document.getElementById('btn-buy-equip')!.addEventListener('click', buyMerchantEquip);
+
+  // 2. Offerta Ossidiana Vulcanica
+  const itemGems = document.createElement('div');
+  itemGems.className = 'currency-item';
+  itemGems.style.justifyContent = 'space-between';
+  itemGems.style.padding = '0.6rem';
+  itemGems.innerHTML = `
+    <div style="text-align: left;">
+      <span style="font-weight: 700; color: #fff; font-size: 0.72rem;">Ossidiana Vulcanica (+15 💎)</span>
+      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Acquista minerali della mappa</p>
+    </div>
+    <button class="btn-popup-close" id="btn-buy-gems" style="background: var(--gold); color: #000; font-size: 0.65rem; padding: 0.3rem 0.6rem;">🪙 350</button>
+  `;
+  container.appendChild(itemGems);
+  document.getElementById('btn-buy-gems')!.addEventListener('click', buyMerchantGems);
+
+  // 3. Offerta Evocazione Portale del Mercante
+  const itemSummon = document.createElement('div');
+  itemSummon.className = 'currency-item';
+  itemSummon.style.justifyContent = 'space-between';
+  itemSummon.style.padding = '0.6rem';
+  itemSummon.innerHTML = `
+    <div style="text-align: left;">
+      <span style="font-weight: 700; color: #a07cf8; font-size: 0.72rem;">Evoca con Ossidiana 🔮</span>
+      <p style="font-size: 0.58rem; color: var(--text-muted); margin-top: 1px;">Tenta il risveglio di un eroe casuale</p>
+    </div>
+    <button class="btn-popup-close" id="btn-buy-summon" style="background: var(--special); color: #fff; border: none; border-radius: 4px; font-size: 0.65rem; padding: 0.3rem 0.6rem; cursor: pointer;">💎 15</button>
+  `;
+  container.appendChild(itemSummon);
+  document.getElementById('btn-buy-summon')!.addEventListener('click', buyMerchantSummon);
+
+  // 4. Offerte Eroi Unici Selezionati
+  merchantHeroOffers.forEach((offer, idx) => {
+    const card = document.createElement('div');
+    card.className = 'merchant-offer-card';
+    
+    let classEmoji = '⚔️';
+    if (offer.template.heroClass === 'JANA') classEmoji = '🪄';
+    else if (offer.template.heroClass === 'GIGANTE') classEmoji = '🛡️';
+    else if (offer.template.heroClass === 'ACCABADORA') classEmoji = '💀';
+    
+    const gradeColor = GRADE_BORDER_COLOR[offer.template.grade] || '#8e9aa6';
+    
+    card.innerHTML = `
+      <div class="merchant-offer-header">
+        <div style="font-size: 1.4rem; background: rgba(255,255,255,0.03); border: 1px solid ${gradeColor}; border-radius: 6px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+          ${classEmoji}
+        </div>
+        <div class="merchant-offer-details">
+          <span class="merchant-offer-name" style="color: ${gradeColor};">${offer.template.name}</span>
+          <span class="merchant-offer-sub">${offer.template.heroClass} • Grado ${offer.template.grade}</span>
+        </div>
+      </div>
+      <div class="merchant-offer-buttons">
+        <button class="btn-merchant-buy" id="btn-buy-offer-coins-${idx}" ${offer.bought ? 'disabled' : ''}>
+          ${offer.bought ? 'VENDUTO' : `🪙 ${offer.costCoins}`}
+        </button>
+        <button class="btn-merchant-buy" id="btn-buy-offer-gems-${idx}" style="color: #63b3ed; border-color: rgba(99, 179, 237, 0.3);" ${offer.bought ? 'disabled' : ''}>
+          ${offer.bought ? 'VENDUTO' : `💎 ${offer.costGems}`}
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(card);
+    
+    if (!offer.bought) {
+      document.getElementById(`btn-buy-offer-coins-${idx}`)!.addEventListener('click', () => buyMerchantOffer(idx, 'COINS'));
+      document.getElementById(`btn-buy-offer-gems-${idx}`)!.addEventListener('click', () => buyMerchantOffer(idx, 'GEMS'));
+    }
+  });
 }
 
-function buyMerchantHero() {
-  const lang = gameState.language || 'en';
-  if (gameState.coins < 400) {
-    alert(lang === 'en' ? "❌ Insufficient gold coins!" : "❌ Monete d'oro insufficienti!");
+function buyMerchantOffer(index: number, currency: 'COINS' | 'GEMS') {
+  const offer = merchantHeroOffers[index];
+  if (!offer || offer.bought) return;
+
+  const lang = gameState.language || 'it';
+
+  if (getRunHeroCount() >= 5) {
+    alert(lang === 'it' ? '❌ Squadra al completo! Max 5 guerrieri per run.' : '❌ Team full! Max 5 warriors per run.');
     return;
   }
-  gameState.coins -= 400;
+
+  if (currency === 'COINS') {
+    if (gameState.coins < offer.costCoins) {
+      alert(lang === 'it' ? "❌ Monete d'oro insufficienti!" : "❌ Insufficient gold coins!");
+      return;
+    }
+    gameState.coins -= offer.costCoins;
+  } else {
+    if (gameState.gems < offer.costGems) {
+      alert(lang === 'it' ? "❌ Ossidiana insufficiente!" : "❌ Insufficient Obsidian gems!");
+      return;
+    }
+    gameState.gems -= offer.costGems;
+  }
   
-  // Evoca un eroe a caso
-  const roll = Math.random() < 0.20 ? 'R' : 'C';
-  const template = getRandomHeroTemplateOfGrade(roll);
+  offer.bought = true;
+  const heroObj = instantiateHero(offer.template);
+  gameState.inventory.push(heroObj);
+  unlockCodexHero(heroObj.name);
+  
+  alert(lang === 'it'
+    ? `🛒 ACQUISTO EFFETTUATO!\nHai reclutato: ${heroObj.name} (${heroObj.grade})! Aggiunto in riserva.`
+    : `🛒 PURCHASE COMPLETED!\nYou recruited: ${heroObj.name} (${heroObj.grade})! Added to reserve.`);
+    
+  renderMerchantItems();
+  renderInventorySlots();
+  updateUI();
+  GameStorage.save();
+  AudioSynth.playLevelUp();
+}
+
+function buyMerchantSummon() {
+  const lang = gameState.language || 'it';
+  if (gameState.gems < 15) {
+    alert(lang === 'it' ? "❌ Ossidiana insufficiente!" : "❌ Insufficient Obsidian gems!");
+    return;
+  }
+  if (getRunHeroCount() >= 5) {
+    alert(lang === 'it' ? '❌ Squadra al completo! Max 5 guerrieri per run.' : '❌ Team full! Max 5 warriors per run.');
+    return;
+  }
+  gameState.gems -= 15;
+  
+  const grade = rollGachaGrade();
+  const template = getRandomUnlockedTemplateOfGrade(grade);
   const heroObj = instantiateHero(template);
   gameState.inventory.push(heroObj);
   unlockCodexHero(heroObj.name);
-
-  alert(lang === 'en' 
-    ? `🛒 PURCHASE COMPLETED!\nYou have awakened: ${heroObj.name} (${heroObj.grade})! Added to inventory.`
-    : `🛒 ACQUISTO EFFETTUATO!\nHai risvegliato: ${heroObj.name} (${heroObj.grade})! Aggiunto in Inventario.`);
   
-  renderInventorySlots();
+  alert(lang === 'it'
+    ? `🔮 EVOCAZIONE EFFETTUATA!\nHai risvegliato: ${heroObj.name} (${heroObj.grade})! Aggiunto in riserva.`
+    : `🔮 SUMMON COMPLETED!\nYou awakened: ${heroObj.name} (${heroObj.grade})! Added to reserve.`);
+    
   renderMerchantItems();
+  renderInventorySlots();
   updateUI();
   GameStorage.save();
+  AudioSynth.playAscension();
 }
 
 function buyMerchantGems() {
@@ -2468,15 +2685,25 @@ function initGachaStore() {
 async function pullGacha(pullsCount: number) {
   const lang = gameState.language || 'en';
   const cost = pullsCount === 1 ? 10 : 90;
-  if (gameState.gems < cost) {
-    alert(lang === 'en'
-      ? "❌ Insufficient Obsidian! Earn more gems by winning battles or clearing stages."
-      : "❌ Ossidiana insufficiente! Ottieni altre gemme vincendo scontri o superando i livelli.");
-    return;
+  
+  if (gachaMode === 'SESSION') {
+    if (gameState.gems < cost) {
+      alert(lang === 'en'
+        ? "❌ Insufficient Obsidian! Earn more gems by winning battles or clearing stages."
+        : "❌ Ossidiana insufficiente! Ottieni altre gemme vincendo scontri o superando i livelli.");
+      return;
+    }
+    gameState.gems -= cost;
+  } else {
+    if (gameState.eternalGems < cost) {
+      alert(lang === 'en'
+        ? "❌ Insufficient Eternal Gems! Convert obsidian in shop or make mock IAP purchases."
+        : "❌ Gemme Primordiali insufficienti! Converti ossidiana nello shop o effettua un finto acquisto premium.");
+      return;
+    }
+    gameState.eternalGems -= cost;
   }
 
-  // Deduci gemme
-  gameState.gems -= cost;
   updateUI();
   GameStorage.save();
 
@@ -2502,7 +2729,12 @@ async function pullGacha(pullsCount: number) {
 
   for (let p = 0; p < pullsCount; p++) {
     const grade = rollGachaGrade();
-    const template = getRandomHeroTemplateOfGrade(grade);
+    let template: HeroTemplate;
+    if (gachaMode === 'SESSION') {
+      template = getRandomUnlockedTemplateOfGrade(grade);
+    } else {
+      template = getRandomLevelEligibleTemplateOfGrade(grade);
+    }
     const heroObj = instantiateHero(template);
     pulledHeroes.push(heroObj);
     
@@ -2562,11 +2794,25 @@ async function pullGacha(pullsCount: number) {
 
     card.innerHTML = buildFramedCardInner(hero, { showElem: true, isIdle: false });
 
+    // Reclutamento in-game vs. sblocco permanente
+    if (gachaMode === 'SESSION') {
+      gameState.inventory.push(hero);
+      // Già sbloccato per vincolo logico, aggiorna codex per sicurezza
+      unlockCodexHero(hero.name);
+    } else {
+      const isNew = !gameState.unlockedCollection.includes(hero.name);
+      if (isNew) {
+        gameState.unlockedCollection.push(hero.name);
+        unlockCodexHero(hero.name);
+        card.innerHTML += `<div class="permanent-unlock-badge">${lang === 'en' ? 'NEW UNLOCK!' : 'NUOVO SBLOCCO!'}</div>`;
+      } else {
+        // Doppione permanente: restituisce un rimborso di gemme
+        gameState.eternalGems += 3;
+        card.innerHTML += `<div class="permanent-unlock-badge" style="background:linear-gradient(90deg, transparent, #e0c79b, transparent); color:#000;">${lang === 'en' ? 'REFUND (+3 🔮)' : 'DUPLICATO (+3 🔮)'}</div>`;
+      }
+    }
+
     cardsDisplay.appendChild(card);
-    
-    // Inserisce nell'inventario di gioco
-    gameState.inventory.push(hero);
-    unlockCodexHero(hero.name);
   });
 
   // Animazione sequenziale a cascata per rivelare le carte (effetto premium!)
@@ -2605,9 +2851,57 @@ function rollGachaGrade(): HeroGrade {
   return 'C';                 // 70%
 }
 
-function getRandomHeroTemplateOfGrade(grade: HeroGrade): HeroTemplate {
-  const eligible = Object.values(HERO_TEMPLATES).filter(h => h.grade === grade);
-  return eligible[Math.floor(Math.random() * eligible.length)];
+function getRandomUnlockedTemplateOfGrade(grade: HeroGrade): HeroTemplate {
+  const eligible = Object.values(HEROES)
+    .map(h => h.template)
+    .filter(t => t.grade === grade && gameState.unlockedCollection.includes(t.name));
+  
+  if (eligible.length > 0) {
+    return eligible[Math.floor(Math.random() * eligible.length)];
+  }
+  
+  // Se non ci sono eroi sbloccati di questa rarità, effettua un degradamento automatico delle rarità
+  const order: HeroGrade[] = ['SR', 'S', 'R', 'C'];
+  const startIdx = order.indexOf(grade);
+  for (let i = startIdx + 1; i < order.length; i++) {
+    const fallbackGrade = order[i];
+    const fallbackEligible = Object.values(HEROES)
+      .map(h => h.template)
+      .filter(t => t.grade === fallbackGrade && gameState.unlockedCollection.includes(t.name));
+    if (fallbackEligible.length > 0) {
+      return fallbackEligible[Math.floor(Math.random() * fallbackEligible.length)];
+    }
+  }
+  
+  // Fallback estremo garantito (Josto è sbloccato di default)
+  return HERO_TEMPLATES.SHARDANA_C;
+}
+
+function getRandomLevelEligibleTemplateOfGrade(grade: HeroGrade): HeroTemplate {
+  const eligible = Object.values(HERO_TEMPLATES).filter(t => {
+    const reqLvl = t.requiredProfileLevel || 1;
+    return t.grade === grade && reqLvl <= gameState.profileLevel;
+  });
+  
+  if (eligible.length > 0) {
+    return eligible[Math.floor(Math.random() * eligible.length)];
+  }
+  
+  // Se il livello profilo non consente questa rarità, degrada
+  const order: HeroGrade[] = ['SR', 'S', 'R', 'C'];
+  const startIdx = order.indexOf(grade);
+  for (let i = startIdx + 1; i < order.length; i++) {
+    const fallbackGrade = order[i];
+    const fallbackEligible = Object.values(HERO_TEMPLATES).filter(t => {
+      const reqLvl = t.requiredProfileLevel || 1;
+      return t.grade === fallbackGrade && reqLvl <= gameState.profileLevel;
+    });
+    if (fallbackEligible.length > 0) {
+      return fallbackEligible[Math.floor(Math.random() * fallbackEligible.length)];
+    }
+  }
+  
+  return HERO_TEMPLATES.SHARDANA_C;
 }
 
 function closeGachaReveal() {
@@ -2617,9 +2911,44 @@ function closeGachaReveal() {
 // ─── UTILS & RENDERING GENERALE ───
 
 function updateUI() {
-  document.getElementById('ui-coins')!.innerText = gameState.coins.toString();
-  document.getElementById('ui-gems')!.innerText = gameState.gems.toString();
-  document.getElementById('ui-current-level')!.innerText = gameState.level.toString();
+  const coinsEl = document.getElementById('ui-coins');
+  const gemsEl = document.getElementById('ui-gems');
+  const lvlEl = document.getElementById('ui-current-level');
+  const eternalEl = document.getElementById('ui-eternal-gems');
+
+  if (coinsEl) coinsEl.innerText = gameState.coins.toString();
+  if (gemsEl) gemsEl.innerText = gameState.gems.toString();
+  if (lvlEl) lvlEl.innerText = gameState.level.toString();
+  if (eternalEl) eternalEl.innerText = gameState.eternalGems.toString();
+
+  // Aggiorna la Home Profile UI
+  const profileLvlEl = document.getElementById('ui-profile-level');
+  const profileExpBar = document.getElementById('ui-profile-exp-bar') as HTMLElement;
+  const profileExpText = document.getElementById('ui-profile-exp-text');
+  const homeAdvDesc = document.getElementById('ui-home-adventure-desc');
+
+  if (profileLvlEl) profileLvlEl.innerText = gameState.profileLevel.toString();
+  
+  const requiredExp = gameState.profileLevel * 150;
+  if (profileExpBar) {
+    const percentage = Math.min(100, (gameState.profileExp / requiredExp) * 100);
+    profileExpBar.style.width = `${percentage}%`;
+  }
+  if (profileExpText) {
+    profileExpText.innerText = `${gameState.profileExp} / ${requiredExp} XP`;
+  }
+  if (homeAdvDesc) {
+    const lang = gameState.language || 'it';
+    const scenarioIdx = Math.min(SCENARIOS_LOCALIZED.length - 1, gameState.level - 1);
+    const scenario = SCENARIOS_LOCALIZED[scenarioIdx];
+    homeAdvDesc.innerText = lang === 'en'
+      ? `Map: Stage ${gameState.level} (${scenario.name.en.split(': ')[1] || scenario.name.en})`
+      : `Mappa: Tappa ${gameState.level} (${scenario.name.it.split(': ')[1] || scenario.name.it})`;
+  }
+
+  // Forza il rendering del deck iniziale e lo stato dei bottoni navigazione
+  renderHomeStarterDeck();
+  checkExplorationStatus();
 }
 
 function sleep(ms: number) {
@@ -2665,6 +2994,9 @@ function applyTranslations() {
   }
   
   // Translate bottom navigation labels
+  const navLblHome = document.getElementById('nav-lbl-home');
+  if (navLblHome) navLblHome.innerText = lang === 'en' ? "Home" : "Home";
+  
   const navLblBoard = document.getElementById('nav-lbl-board');
   if (navLblBoard) navLblBoard.innerText = lang === 'en' ? "Board" : "Tavola";
   
@@ -2675,14 +3007,14 @@ function applyTranslations() {
   if (navLblCodex) navLblCodex.innerText = lang === 'en' ? "Codex" : "Codice";
   
   const navLblGacha = document.getElementById('nav-lbl-gacha');
-  if (navLblGacha) navLblGacha.innerText = lang === 'en' ? "Summon" : "Tempio";
+  if (navLblGacha) navLblGacha.innerText = lang === 'en' ? "Summon" : "Altare";
   
   // Gacha page title and description
   const gachaScreen = document.getElementById('screen-gacha');
   if (gachaScreen) {
     const bannerTitle = gachaScreen.querySelector('.scenario-banner h2');
     const bannerDesc = gachaScreen.querySelector('.scenario-banner p');
-    if (bannerTitle) bannerTitle.textContent = lang === 'en' ? "Summoning Temple" : "Tempio delle Evocazioni";
+    if (bannerTitle) bannerTitle.textContent = lang === 'en' ? "Summoning Altar" : "Altare delle Evocazioni";
     if (bannerDesc) bannerDesc.textContent = lang === 'en' ? "Spend gems to awaken ancient Sardinian warriors" : "Spendi le gemme per risvegliare antichi guerrieri sardi";
     
     const ratesTitle = gachaScreen.querySelector('.rates-title');
@@ -2716,6 +3048,7 @@ function applyTranslations() {
   // Re-render UI grids to reflect language change
   updateUI();
   renderCodexGrid();
+  updateAutoCombatButtonUI();
 }
 
 function unlockCodexHero(name: string) {
@@ -2765,10 +3098,11 @@ function renderCodexGrid() {
       card.innerHTML = buildFramedCardInner(template, { isIdle: true });
       card.addEventListener('click', () => openCodexLore(template.name));
     } else {
+      const reqLvl = template.requiredProfileLevel || 1;
       card.innerHTML = `
         <img class="card-frame-bg" src="${getRarityFrameSrc(template.grade)}" alt="" style="filter: grayscale(1) opacity(0.3);">
         <div class="card-hero-emoji">🔒</div>
-        <div class="card-hero-name-overlay">???</div>
+        <div class="card-hero-name-overlay">${lang === 'en' ? `Lvl ${reqLvl}+` : `Liv ${reqLvl}+`}</div>
         <span class="card-grade-badge ${template.grade.toLowerCase()}">${template.grade}</span>
       `;
     }
@@ -2806,4 +3140,559 @@ function openCodexLore(heroName: string) {
     
     overlay.classList.add('active');
   }
+}
+
+// ─── NUOVE FUNZIONI DI METAPROGRESSIONE, SHOP E GESTIONE RUN ───
+
+let isExplorationActive = false;
+let gachaMode: 'PERMANENT' | 'SESSION' = 'PERMANENT';
+let isAutoCombat = false;
+let activeEnemy: Enemy | null = null;
+let currentBattleTime = 0.0;
+let selectedRosterNames: string[] = [];
+let merchantHeroOffers: { template: HeroTemplate, costCoins: number, costGems: number, bought: boolean }[] = [];
+let pendingEliteRecruitment = false;
+
+function checkExplorationStatus() {
+  isExplorationActive = gameState.team && gameState.team.length > 0;
+  
+  const btnBoard = document.getElementById('nav-btn-board')!;
+  const btnTeam = document.getElementById('nav-btn-team')!;
+  
+  if (!isExplorationActive) {
+    btnBoard.classList.add('disabled');
+    btnTeam.classList.add('disabled');
+    
+    const adventureBtnLbl = document.getElementById('lbl-btn-start-adventure');
+    if (adventureBtnLbl) {
+      adventureBtnLbl.innerText = gameState.language === 'en' ? 'START EXPLORATION ➔' : 'INIZIA VIAGGIO ➔';
+    }
+  } else {
+    btnBoard.classList.remove('disabled');
+    btnTeam.classList.remove('disabled');
+    
+    const adventureBtnLbl = document.getElementById('lbl-btn-start-adventure');
+    if (adventureBtnLbl) {
+      adventureBtnLbl.innerText = gameState.language === 'en' ? 'RESUME EXPLORATION ➔' : 'RIPRENDI VIAGGIO ➔';
+    }
+  }
+}
+
+function updateGachaViewMode() {
+  const lang = gameState.language || 'it';
+  
+  if (lastScreenBeforeGacha === 'screen-board' || lastScreenBeforeGacha === 'screen-team' || lastScreenBeforeGacha === 'screen-combat') {
+    gachaMode = 'SESSION';
+  } else {
+    gachaMode = 'PERMANENT';
+  }
+
+  const titleEl = document.querySelector('#screen-gacha h2')!;
+  const descEl = document.getElementById('lbl-premium-shop-desc') || document.querySelector('#screen-gacha p')!;
+  const singleCostEl = document.querySelector('#btn-gacha-single .pull-cost')!;
+  const multiCostEl = document.querySelector('#btn-gacha-multi .pull-cost')!;
+
+  if (gachaMode === 'SESSION') {
+    titleEl.innerHTML = lang === 'en' ? 'Run Session Summon' : 'Evocazione di Sessione';
+    descEl.innerHTML = lang === 'en' 
+      ? 'Spend in-game Obsidian Gems to temporarily recruit heroes from your unlocked collection.' 
+      : 'Spendi Gemme di Ossidiana in-game per reclutare temporaneamente gli eroi dalla tua collezione sbloccata.';
+    
+    singleCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 10`;
+    multiCostEl.innerHTML = `<img src="assets/art/ui_gem_icon.svg" class="curr-icon"> 90`;
+  } else {
+    titleEl.innerHTML = lang === 'en' ? 'Ancestors Summon Altar' : 'Tempio degli Antenati';
+    descEl.innerHTML = lang === 'en' 
+      ? 'Spend Premium Eternal Gems to permanently unlock new mythological heroes based on your profile level.' 
+      : 'Spendi Gemme Primordiali per sbloccare permanentemente nuovi eroi mitologici basati sul tuo livello profilo.';
+    
+    singleCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> 10`;
+    multiCostEl.innerHTML = `<span style="font-size:1rem; line-height:1;">🔮</span> 90`;
+  }
+}
+
+function navigateToScreen(screenId: string) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  
+  const navBtn = document.querySelector(`.nav-btn[data-screen="${screenId}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  
+  const target = document.getElementById(screenId);
+  if (target) target.classList.add('active');
+  
+  if (screenId === 'screen-board') {
+    setTimeout(scrollToPlayer, 100);
+  }
+}
+
+function startOrResumeExplorationRun() {
+  const lang = gameState.language || 'it';
+  
+  if (isExplorationActive) {
+    // Riprendi
+    navigateToScreen('screen-board');
+    return;
+  }
+  
+  // Avvia una nuova run
+  if (confirm(lang === 'it' 
+    ? "Stai per iniziare un nuovo viaggio sardo! Le monete e le gemme di ossidiana accumulate nella run precedente verranno azzerate. Confermi?" 
+    : "You are about to start a new exploration run! In-game coins and obsidian gems from the previous run will be reset. Confirm?")) {
+    
+    openRosterSelectPopup();
+  }
+}
+
+function renderHomeStarterDeck() {
+  const container = document.getElementById('home-starter-deck-grid');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  const starters = [
+    HERO_TEMPLATES.SHARDANA_C, // Josto
+    HERO_TEMPLATES.GIGANTE_C,  // Bruncu
+    HERO_TEMPLATES.ACCABADORA_C // Caddozzo
+  ];
+  
+  starters.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'hero-slot hero-framed grade-c';
+    el.style.width = '100%';
+    el.style.aspectRatio = '1 / 1.35';
+    el.style.cursor = 'default';
+    el.innerHTML = buildFramedCardInner(t, { showElem: true });
+    container.appendChild(el);
+  });
+}
+
+function buyPremiumPack(gemsGained: number, price: number) {
+  const lang = gameState.language || 'it';
+  
+  // Simula l'IAP mobile nativo
+  alert(lang === 'it'
+    ? `📲 [SIMULAZIONE APP STORE / GOOGLE PLAY]\n\nProcedo al pagamento di € ${price.toFixed(2)} tramite il tuo account di sistema...\n\nAcquisto completato con successo! ✅`
+    : `📲 [MOCK APP STORE / GOOGLE PLAY IN-APP PURCHASE]\n\nProcessing payment of € ${price.toFixed(2)} using your native sandbox account...\n\nTransaction completed successfully! ✅`);
+  
+  gameState.eternalGems += gemsGained;
+  
+  // Chiudi shop ed aggiorna
+  document.getElementById('popup-premium-shop')!.classList.remove('active');
+  updateUI();
+  GameStorage.save();
+  
+  // Suonino monetizzazione
+  AudioSynth.playAscension();
+}
+
+function convertExplorationGems() {
+  const lang = gameState.language || 'it';
+  
+  if (gameState.gems < 100) {
+    alert(lang === 'it'
+      ? "❌ Ossidiana in-game insufficiente! Ti servono almeno 100 Ossidiane per effettuare la conversione."
+      : "❌ Insufficient in-game Obsidian! You need at least 100 Obsidian to perform conversion.");
+    return;
+  }
+  
+  gameState.gems -= 100;
+  gameState.eternalGems += 10;
+  
+  alert(lang === 'it'
+    ? "🔄 Conversione completata! Hai scambiato 100 Ossidiane per 10 Gemme Primordiali."
+    : "🔄 Conversion completed! You traded 100 Obsidian for 10 Eternal Gems.");
+    
+  updateUI();
+  GameStorage.save();
+  AudioSynth.playLevelUp();
+}
+
+function checkForProfileLevelUp(xpGained: number) {
+  gameState.profileExp += xpGained;
+  const reqExp = gameState.profileLevel * 150;
+  const lang = gameState.language || 'it';
+  let leveledUp = false;
+  
+  while (gameState.profileExp >= reqExp) {
+    gameState.profileExp -= reqExp;
+    gameState.profileLevel += 1;
+    leveledUp = true;
+    
+    // Regalo per level up
+    gameState.eternalGems += 15;
+  }
+  
+  if (leveledUp) {
+    setTimeout(() => {
+      alert(lang === 'it'
+        ? `🎉 NUOVO LIVELLO PROFILO GIOCATORE: LV. ${gameState.profileLevel}! 🎉\nHai sbloccato la possibilità di trovare eroi più rari e ottenuto +15 Gemme Primordiali! 🔮`
+        : `🎉 NEW PLAYER PROFILE LEVEL: LV. ${gameState.profileLevel}! 🎉\nYou unlocked the chance to summon rarer heroes and earned +15 Eternal Gems! 🔮`);
+      
+      renderCodexGrid();
+      updateUI();
+      GameStorage.save();
+    }, 800);
+  }
+}
+
+function updateAutoCombatButtonUI() {
+  const btnAuto = document.getElementById('btn-toggle-auto-combat');
+  if (!btnAuto) return;
+  const lang = gameState.language || 'it';
+  
+  if (isAutoCombat) {
+    btnAuto.classList.add('auto-active');
+    btnAuto.innerText = lang === 'it' ? "AUTO: SI 🤖" : "AUTO: ON 🤖";
+  } else {
+    btnAuto.classList.remove('auto-active');
+    btnAuto.innerText = lang === 'it' ? "AUTO: NO 🤖" : "AUTO: OFF 🤖";
+  }
+}
+
+function executeActiveHeroSkill(hero: Hero) {
+  if (!activeEnemy) return;
+  const enemy = activeEnemy;
+  const battleTime = currentBattleTime;
+  const synergies = CombatEngine.calculateSynergies(gameState.team);
+  
+  const combatLog: string[] = [];
+  CombatEngine.castHeroSkill(hero, gameState.team, enemy, battleTime, combatLog);
+  
+  combatLog.forEach(l => {
+    const isHeal = l.includes('SOFFIO DI DOMUS') || l.includes('lancia Soffio di Domus');
+    const isCrit = l.includes('Colpo di spada mitico') || l.includes('Esecuzione letale');
+    const elemAdv = l.includes('Vantaggio Elementale');
+    
+    const row = document.getElementById(`row-${hero.name.replace(/\s+/g, '')}`);
+    if (row) {
+      row.style.borderColor = 'var(--gold)';
+      setTimeout(() => row.style.borderColor = 'var(--gold-border)', 300);
+      
+      // Animazione Claymation: Attacco Speciale Eroe
+      const img = row.querySelector('.avatar-image');
+      if (img) {
+        img.classList.add('avatar-attack-left');
+        setTimeout(() => img.classList.remove('avatar-attack-left'), 500);
+      }
+    }
+    
+    if (isHeal) {
+      gameState.team.forEach(h => {
+        if (h.currentHp > 0) {
+          const healVal = Math.round(hero.attack * 2.0 * (synergies.healMultiplier));
+          spawnFloatingDamage(healVal.toString(), false, document.getElementById(`row-${h.name.replace(/\s+/g, '')}`), false, true);
+          
+          const hRow = document.getElementById(`row-${h.name.replace(/\s+/g, '')}`);
+          if (hRow) {
+            const hImg = hRow.querySelector('.avatar-image');
+            if (hImg) {
+              hImg.classList.add('avatar-idle');
+            }
+          }
+        }
+      });
+      addCombatLog(l, 'text-success');
+    } else {
+      const isExec = l.includes('Esecuzione letale') || l.includes('letale');
+      const dmgVal = Math.max(5, Math.round(hero.attack * (isExec ? 5.5 : (l.includes('COLPO DI GRAZIA') || l.includes('Colpo di Grazia') ? 2.0 : 3.5)) - enemy.defense));
+      const elemMult = CombatEngine.getElementalMultiplier(hero.element || 'VENTO', enemy.element || 'VENTO');
+      const finalDmg = Math.round(dmgVal * elemMult);
+
+      if (isCrit || elemAdv) {
+        AudioSynth.playCritHit();
+        const enemyVisual = document.querySelector('.enemy-visual') as HTMLElement;
+        const canvasEl = document.getElementById('particle-canvas');
+        if (enemyVisual && canvasEl) {
+          const rect = enemyVisual.getBoundingClientRect();
+          const canvasRect = canvasEl.getBoundingClientRect();
+          const x = rect.left - canvasRect.left + rect.width / 2;
+          const y = rect.top - canvasRect.top + rect.height / 2;
+          ParticleManager.spawnExplosion(x, y, isCrit ? '#fbb6ce' : '#ffd700', isCrit ? 20 : 12);
+        }
+      }
+
+      // Animazione Claymation: Nemico colpito o abbattuto
+      const enemyAvatarEl = document.getElementById('enemy-avatar');
+      if (enemyAvatarEl) {
+        const img = enemyAvatarEl.querySelector('.avatar-image');
+        if (img) {
+          if (enemy.currentHp <= 0) {
+            img.classList.add('avatar-dead');
+          } else {
+            img.classList.add('avatar-hit');
+            setTimeout(() => img.classList.remove('avatar-hit'), 500);
+          }
+        }
+      }
+
+      spawnFloatingDamage(finalDmg.toString(), false, document.querySelector('.enemy-visual'), isCrit || elemAdv, false);
+      addCombatLog(l, l.includes('SCUDO CONCENTRICO') || l.includes('Scudo Concentrico') ? 'text-purple' : 'text-gold');
+    }
+  });
+
+  // Aggiorna l'HP del nemico dopo l'attacco
+  const enemyHpBar = document.getElementById('enemy-hp-bar')!;
+  const enemyHpText = document.getElementById('enemy-hp-text')!;
+  const enemyHpPct = Math.max(0, (enemy.currentHp / enemy.maxHp) * 100);
+  enemyHpBar.style.width = `${enemyHpPct}%`;
+  enemyHpText.innerText = `${enemy.currentHp}/${enemy.maxHp}`;
+
+  // Azzera il timer e la prontezza
+  hero.skillTimer = 0;
+  hero.skillReady = false;
+
+  const skillBar = document.getElementById(`skill-bar-${hero.name.replace(/\s+/g, '')}`);
+  if (skillBar) {
+    skillBar.style.width = '0%';
+    skillBar.classList.remove('ready');
+  }
+
+  renderCombatTeamGrid();
+}
+
+function openRosterSelectPopup() {
+  const lang = gameState.language || 'it';
+  
+  // Resetta la selezione impostando i 3 eroi di partenza di default se disponibili, altrimenti vuoto
+  selectedRosterNames = ['Josto', 'Bruncu', 'Caddozzo'].filter(name => gameState.unlockedCollection.includes(name));
+  
+  // Limita a un massimo di 3 in ogni caso
+  selectedRosterNames = selectedRosterNames.slice(0, 3);
+  
+  renderRosterSelectGrid();
+  document.getElementById('popup-roster-select')!.classList.add('active');
+}
+
+function renderRosterSelectGrid() {
+  const grid = document.getElementById('roster-select-grid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  const lang = gameState.language || 'it';
+  
+  // Cicla su tutti gli eroi sbloccati nella collezione permanente
+  const unlockedHeroes = Object.values(HEROES)
+    .map(h => h.template)
+    .filter(t => gameState.unlockedCollection.includes(t.name));
+    
+  unlockedHeroes.forEach(t => {
+    const slot = document.createElement('div');
+    const isSelected = selectedRosterNames.includes(t.name);
+    
+    // Classi condizionali per la selezione
+    slot.className = `roster-hero-slot ${isSelected ? 'selected' : ''}`;
+    slot.style.width = '82px';
+    slot.style.height = '112px';
+    
+    // Genera l'HTML interno del frame
+    slot.innerHTML = buildFramedCardInner(instantiateHero(t), { showElem: true, isIdle: true });
+    
+    // Listener del click per selezionare/deselezionare
+    slot.addEventListener('click', () => {
+      if (isSelected) {
+        // Deseleziona
+        selectedRosterNames = selectedRosterNames.filter(name => name !== t.name);
+      } else {
+        // Seleziona se non abbiamo superato le 3 unità
+        if (selectedRosterNames.length < 3) {
+          selectedRosterNames.push(t.name);
+        } else {
+          // Sostituisci l'elemento più vecchio (UX scorrevole premium!)
+          selectedRosterNames.shift();
+          selectedRosterNames.push(t.name);
+        }
+      }
+      
+      // Rinfresca la griglia e gli indicatori
+      renderRosterSelectGrid();
+    });
+    
+    grid.appendChild(slot);
+  });
+  
+  // Aggiorna il contatore UI
+  const counterEl = document.getElementById('lbl-roster-select-count')!;
+  counterEl.innerText = lang === 'it' 
+    ? `SELEZIONATI: ${selectedRosterNames.length} / 3`
+    : `SELEZIONATI: ${selectedRosterNames.length} / 3`;
+    
+  // Abilita o disabilita il pulsante di avvio
+  const confirmBtn = document.getElementById('btn-roster-confirm') as HTMLButtonElement;
+  if (confirmBtn) {
+    confirmBtn.disabled = selectedRosterNames.length !== 3;
+  }
+}
+
+function confirmStartingRosterAndStart() {
+  if (selectedRosterNames.length !== 3) return;
+  
+  // Chiudi il popup
+  document.getElementById('popup-roster-select')!.classList.remove('active');
+  
+  // Salva il roster di partenza per i reset successivi (morte/fine mappa)
+  gameState.startingRosterNames = selectedRosterNames.slice();
+
+  // Azzera le risorse in-game e imposta la posizione
+  gameState.coins = 100;
+  gameState.gems = 10;
+  gameState.playerPosition = 0;
+  gameState.inventory = [];
+
+  // Inizializza la squadra attiva con i 3 eroi scelti dall'utente instanziandoli
+  gameState.team = selectedRosterNames.map(name => {
+    const entry = Object.values(HEROES).find(h => h.template.name === name);
+    return instantiateHero(entry!.template);
+  });
+  
+  // Rigenera il tabellone e gli slot della squadra
+  initBoard();
+  initTeamSlots();
+  
+  // Salva ed aggiorna la schermata di gioco
+  GameStorage.save();
+  updateUI();
+  
+  navigateToScreen('screen-board');
+
+  // Suonino di avventura
+  AudioSynth.playLevelUp();
+}
+
+// ─── RESET ROSTER & RECLUTAMENTO IN-RUN ───
+
+function resetToStartingRoster() {
+  const names = gameState.startingRosterNames.length === 3
+    ? gameState.startingRosterNames
+    : ['Josto', 'Bruncu', 'Caddozzo'];
+  gameState.team = names.map(name => {
+    const entry = Object.values(HEROES).find(h => h.template.name === name);
+    return entry ? instantiateHero(entry.template) : instantiateHero(HERO_TEMPLATES.SHARDANA_C);
+  });
+  gameState.inventory = [];
+}
+
+function getRunHeroCount(): number {
+  return gameState.team.length + gameState.inventory.length;
+}
+
+function openRecruitmentPopup(source: 'ELITE' | 'ACCAMPAMENTO') {
+  const lang = gameState.language || 'it';
+  const titleEl = document.getElementById('recruit-title')!;
+  const iconEl = document.getElementById('recruit-icon')!;
+  const descEl = document.getElementById('recruit-desc')!;
+  const itemsEl = document.getElementById('recruit-items')!;
+
+  itemsEl.innerHTML = '';
+
+  if (getRunHeroCount() >= 5) {
+    titleEl.innerText = lang === 'it' ? 'Squadra al Completo' : 'Team Full';
+    iconEl.innerText = '⚔️';
+    descEl.innerText = lang === 'it'
+      ? 'La tua squadra ha già raggiunto il massimo di 5 guerrieri per questa run.'
+      : 'Your team has already reached the maximum of 5 warriors for this run.';
+    document.getElementById('popup-recruit')!.classList.add('active');
+    return;
+  }
+
+  if (source === 'ELITE') {
+    titleEl.innerText = lang === 'it' ? 'Ricompensa Elite! 👾' : 'Elite Reward! 👾';
+    iconEl.innerText = '👾';
+    descEl.innerText = lang === 'it'
+      ? 'Hai sconfitto il Campione Elite! Un guerriero vuole unirsi a te per questa run.'
+      : 'You defeated the Elite Champion! One warrior wants to join you for this run.';
+    const offer = getRandomRecruitOffer();
+    if (offer) renderRecruitCard(offer, 0, 'ELITE', itemsEl);
+  } else {
+    titleEl.innerText = lang === 'it' ? 'Accampamento Sardo ⛺' : 'Sardinian Camp ⛺';
+    iconEl.innerText = '⛺';
+    descEl.innerText = lang === 'it'
+      ? 'Guerrieri sardi offrono i propri servigi. Reclutali con le tue monete per questa run.'
+      : 'Sardinian warriors offer their services. Recruit them with your coins for this run.';
+    const used: string[] = [];
+    [0, 1].forEach(idx => {
+      const offer = getRandomRecruitOffer(used);
+      if (offer) {
+        used.push(offer.name);
+        renderRecruitCard(offer, idx, 'ACCAMPAMENTO', itemsEl);
+      }
+    });
+  }
+
+  document.getElementById('popup-recruit')!.classList.add('active');
+}
+
+function getRandomRecruitOffer(exclude: string[] = []): HeroTemplate | null {
+  const eligible = Object.values(HERO_TEMPLATES).filter(t =>
+    gameState.unlockedCollection.includes(t.name) && !exclude.includes(t.name)
+  );
+  if (eligible.length === 0) return null;
+  return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
+function renderRecruitCard(template: HeroTemplate, idx: number, source: 'ELITE' | 'ACCAMPAMENTO', container: HTMLElement) {
+  const lang = gameState.language || 'it';
+
+  let costCoins = 0;
+  if (source === 'ACCAMPAMENTO') {
+    if (template.grade === 'C') costCoins = 180;
+    else if (template.grade === 'R') costCoins = 300;
+    else if (template.grade === 'S') costCoins = 500;
+    else costCoins = 800; // SR
+  }
+
+  const gradeColor = GRADE_BORDER_COLOR[template.grade] || '#8e9aa6';
+  let classEmoji = '⚔️';
+  if (template.heroClass === 'JANA') classEmoji = '🪄';
+  else if (template.heroClass === 'GIGANTE') classEmoji = '🛡️';
+  else if (template.heroClass === 'ACCABADORA') classEmoji = '💀';
+
+  const card = document.createElement('div');
+  card.className = 'merchant-offer-card';
+  card.id = `recruit-offer-${idx}`;
+  card.innerHTML = `
+    <div class="merchant-offer-header">
+      <div style="font-size: 1.4rem; background: rgba(255,255,255,0.03); border: 1px solid ${gradeColor}; border-radius: 6px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">${classEmoji}</div>
+      <div class="merchant-offer-details">
+        <span class="merchant-offer-name" style="color: ${gradeColor};">${template.name}</span>
+        <span class="merchant-offer-sub">${template.heroClass} · ${template.element} · ${template.grade}</span>
+      </div>
+    </div>
+    <div class="merchant-offer-buttons">
+      <button class="btn-merchant-buy" id="btn-recruit-offer-${idx}">
+        ${source === 'ELITE' ? (lang === 'it' ? '🎁 GRATIS' : '🎁 FREE') : `🪙 ${costCoins}`}
+      </button>
+    </div>
+  `;
+  container.appendChild(card);
+
+  document.getElementById(`btn-recruit-offer-${idx}`)!.addEventListener('click', () => {
+    if (source === 'ACCAMPAMENTO' && gameState.coins < costCoins) {
+      alert(lang === 'it' ? '❌ Monete insufficienti!' : '❌ Insufficient coins!');
+      return;
+    }
+    if (getRunHeroCount() >= 5) {
+      alert(lang === 'it' ? '❌ Squadra al completo (max 5 guerrieri)!' : '❌ Team full (max 5 warriors)!');
+      return;
+    }
+    if (source === 'ACCAMPAMENTO') gameState.coins -= costCoins;
+
+    const hero = instantiateHero(template);
+    if (gameState.team.length < 5) {
+      gameState.team.push(hero);
+    } else {
+      gameState.inventory.push(hero);
+    }
+
+    const btn = document.getElementById(`btn-recruit-offer-${idx}`) as HTMLButtonElement;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = lang === 'it' ? 'RECLUTATO ✓' : 'RECRUITED ✓';
+    }
+
+    initTeamSlots();
+    updateUI();
+    GameStorage.save();
+    AudioSynth.playLevelUp();
+  });
 }

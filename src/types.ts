@@ -69,7 +69,7 @@ export interface Enemy {
   }[];
 }
 
-export type CellType = 'COINS' | 'GEMS' | 'TEMPLE' | 'TRAP' | 'COMMON_ENEMY' | 'ELITE_ENEMY' | 'BOSS' | 'MERCHANT' | 'DECISION';
+export type CellType = 'COINS' | 'GEMS' | 'TEMPLE' | 'TRAP' | 'COMMON_ENEMY' | 'ELITE_ENEMY' | 'BOSS' | 'MERCHANT' | 'DECISION' | 'ACCAMPAMENTO';
 
 export interface Cell {
   id: number;
@@ -79,13 +79,20 @@ export interface Cell {
 }
 
 export interface GameState {
+  // Meta-progressione permanente (fuori dalla mappa)
+  profileLevel: number;
+  profileExp: number;
+  eternalGems: number;
+  unlockedCollection: string[]; // Eroi sbloccati permanentemente (nomi)
+
+  // Sessione di gioco attuale (Mappa attuale)
   currentLevel: number;
   playerPosition: number; // Indice della casella da 0 a MaxCaselle - 1
   coins: number;
   gems: number;
   team: Hero[]; // Squadra attiva di massimo 5 eroi
-  inventory?: Hero[]; // Inventario riserve
-  equipmentInventory?: Equipment[]; // Inventario equipaggiamento
-  language?: 'en' | 'it';
-  unlockedCollection?: string[]; // Nomi o ID degli eroi sbloccati nel Codex
+  inventory: Hero[]; // Inventario riserve
+  equipmentInventory: Equipment[]; // Inventario equipaggiamento
+  language: 'en' | 'it';
 }
+

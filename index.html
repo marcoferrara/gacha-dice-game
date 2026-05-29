@@ -40,14 +40,78 @@
             <img src="assets/art/ui_gem_icon.svg" alt="Gemme" class="curr-icon">
             <span id="ui-gems">10</span>
           </div>
+          <div class="currency-item premium-currency-wrap" title="Gemme Primordiali">
+            <span style="font-size: 1.05rem; line-height: 1;">🔮</span>
+            <span id="ui-eternal-gems">50</span>
+          </div>
         </div>
       </header>
 
       <!-- CONTENUTI SCHERMATE DENTRO IL DISPLAY -->
       <main class="game-display">
 
-        <!-- SCHERMATA 1: LA TAVOLA A SERPENTE (Attiva di default) -->
-        <section class="screen active" id="screen-board">
+        <!-- SCHERMATA 0: HOME / ATRIO (Attiva all'avvio) -->
+        <section class="screen active" id="screen-home">
+          <!-- Profilo del Giocatore -->
+          <div class="profile-card">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-info">
+              <div class="profile-name" id="ui-profile-name">Viaggiatore Sardo</div>
+              <div class="profile-lvl-wrap">
+                <span class="profile-lvl">LV. <span id="ui-profile-level">1</span></span>
+                <div class="profile-exp-bar-wrap">
+                  <div class="profile-exp-bar" id="ui-profile-exp-bar" style="width: 0%;"></div>
+                </div>
+                <span class="profile-exp-text" id="ui-profile-exp-text">0 / 150 XP</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pannello Avventura / Run -->
+          <div class="adventure-panel">
+            <div class="adventure-header">
+              <h3 id="lbl-adventure-title">ESPLORAZIONE ATTUALE</h3>
+              <p id="ui-home-adventure-desc">Mappa: Livello 1 (Nuraghe Losa)</p>
+            </div>
+            <button class="btn-start-adventure" id="btn-start-adventure">
+              <span class="adventure-btn-lbl" id="lbl-btn-start-adventure">INIZIA VIAGGIO ➔</span>
+            </button>
+          </div>
+
+          <!-- Altare Shortcut Button -->
+          <div class="adventure-panel" style="background: radial-gradient(ellipse at 50% 0%, rgba(128, 90, 213, 0.15) 0%, transparent 70%); border-color: rgba(128, 90, 213, 0.25); margin-bottom: 0.6rem;">
+            <div class="adventure-header" style="margin-bottom: 0.4rem;">
+              <h3 style="color: var(--special); text-shadow: 0 0 10px rgba(128, 90, 213, 0.3);" id="lbl-home-summon-shortcut-title">ALTARE DELLE EVOCAZIONI</h3>
+              <p style="font-size: 0.58rem; color: var(--text-muted);" id="lbl-home-summon-shortcut-desc">Evoca ed espandi permanentemente la tua collezione di eroi mitologici.</p>
+            </div>
+            <button class="btn-start-adventure" id="btn-home-go-to-altar" style="background: linear-gradient(135deg, var(--special) 0%, #a07cf8 100%); border-color: #805ad5; box-shadow: 0 0 8px rgba(128, 90, 213, 0.4); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+              <span>🔮</span>
+              <span id="lbl-btn-home-go-to-altar">ALTARE DI EVOCAZIONE ➔</span>
+            </button>
+          </div>
+
+          <!-- Shop Premium Rapido -->
+          <div class="premium-shop-panel">
+            <div class="shop-desc">
+              <h4>🔮 Tempio delle Gemme</h4>
+              <p id="lbl-premium-shop-desc">Scambia Ossidiana per Gemme Primordiali o acquista pacchetti Premium.</p>
+            </div>
+            <button class="btn-open-premium-shop" id="btn-open-premium-shop">
+              <span id="lbl-btn-open-premium-shop">APRI SHOP 🛒</span>
+            </button>
+          </div>
+
+          <!-- Starter Deck Selector -->
+          <div class="starter-deck-panel">
+            <div class="slots-header" id="lbl-starter-deck-header">SQUADRA DI PARTENZA (STARTER DECK)</div>
+            <div class="starter-deck-grid" id="home-starter-deck-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.4rem;">
+              <!-- 3 eroi base di default generati in JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHERMATA 1: LA TAVOLA A SERPENTE -->
+        <section class="screen" id="screen-board">
           <!-- Titolo Scenario -->
           <div class="scenario-banner">
             <h2>Tappa 1: Nuraghe Losa</h2>
@@ -90,7 +154,10 @@
         <section class="screen" id="screen-combat">
           <div class="combat-header">
             <h3>SCONTRO IN TEMPO REALE</h3>
-            <div class="combat-timer" id="combat-timer">0.0s</div>
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <button id="btn-toggle-auto-combat" class="btn-toggle-auto-combat">AUTO: NO 🤖</button>
+              <div class="combat-timer" id="combat-timer">0.0s</div>
+            </div>
           </div>
 
           <!-- Nemico Area -->
@@ -230,21 +297,25 @@
 
       <!-- NAVIGAZIONE SMARTPHONE IN BASSO -->
       <nav class="phone-nav-bar">
-        <button class="nav-btn active" data-screen="screen-board">
+        <button class="nav-btn active" data-screen="screen-home" id="nav-btn-home">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-lbl" id="nav-lbl-home">Home</span>
+        </button>
+        <button class="nav-btn" data-screen="screen-board" id="nav-btn-board">
           <span class="nav-icon">🗺️</span>
           <span class="nav-lbl" id="nav-lbl-board">Board</span>
         </button>
-        <button class="nav-btn" data-screen="screen-team">
+        <button class="nav-btn" data-screen="screen-team" id="nav-btn-team">
           <span class="nav-icon">👥</span>
           <span class="nav-lbl" id="nav-lbl-team">Team</span>
         </button>
-        <button class="nav-btn" data-screen="screen-codex">
+        <button class="nav-btn" data-screen="screen-codex" id="nav-btn-codex">
           <span class="nav-icon">📖</span>
           <span class="nav-lbl" id="nav-lbl-codex">Codex</span>
         </button>
-        <button class="nav-btn" data-screen="screen-gacha">
+        <button class="nav-btn" data-screen="screen-gacha" id="nav-btn-gacha">
           <span class="nav-icon">🔮</span>
-          <span class="nav-lbl" id="nav-lbl-gacha">Summon</span>
+          <span class="nav-lbl" id="nav-lbl-gacha">Altare</span>
         </button>
       </nav>
 
@@ -420,6 +491,94 @@
       </div>
       
       <button class="btn-popup-close" id="btn-close-lore-confirm" style="width: 100%;">Close ➔</button>
+    </div>
+  </div>
+
+  <!-- POPUP SELEZIONE ROSTER INIZIALE -->
+  <div class="popup-overlay" id="popup-roster-select" style="z-index: 130;">
+    <div class="popup-box roster-select-box" style="width: 320px; padding: 1.5rem; border-color: var(--special); max-height: 85vh; display: flex; flex-direction: column;">
+      <button class="btn-close-inspect" id="btn-close-roster-select">✕</button>
+      <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #fff; margin-bottom: 0.2rem;" id="lbl-roster-select-title">Roster di Partenza ⚔️</h2>
+      <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.6rem;" id="lbl-roster-select-subtitle">Scegli 3 eroi sbloccati permanentemente per iniziare il viaggio.</p>
+      
+      <!-- Contatore Selezione -->
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--gold-border); border-radius: 6px; padding: 0.35rem; font-size: 0.65rem; color: #fff; font-weight: 600; text-align: center; margin-bottom: 0.8rem;">
+        <span id="lbl-roster-select-count">SELEZIONATI: 0 / 3</span>
+      </div>
+
+      <!-- Griglia Eroi Selezionabili -->
+      <div id="roster-select-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; overflow-y: auto; flex: 1; padding: 0.2rem; margin-bottom: 1.2rem; min-height: 180px; max-height: 280px;">
+        <!-- Generato dinamicamente in JS -->
+      </div>
+      
+      <button class="btn-confirm-action" id="btn-roster-confirm" style="width: 100%; font-size: 0.72rem; font-weight: 700; padding: 0.5rem 1rem; border-radius: 6px; background: var(--gold); color: #000; border: none; cursor: pointer; transition: opacity 0.2s;" disabled>CONFERMA E INIZIA ➔</button>
+    </div>
+  </div>
+
+  <!-- POPUP SHOP PREMIUM IAP (Finto Acquisto) -->
+  <div class="popup-overlay" id="popup-premium-shop" style="z-index: 135;">
+    <div class="popup-box premium-shop-box" style="width: 320px; padding: 1.5rem; border-color: var(--special); max-height: 85vh; overflow-y: auto;">
+      <button class="btn-close-inspect" id="btn-close-premium-shop">✕</button>
+      <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; color: #fff; margin-bottom: 0.2rem;" id="lbl-premium-shop-title">Bottega delle Gemme 🔮</h2>
+      <p style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 1rem;" id="lbl-premium-shop-subtitle">Acquista Gemme Primordiali per evocare ed espandere permanentemente la tua collezione!</p>
+      
+      <!-- Sezione Finto Shop IAP -->
+      <div class="premium-packages-grid" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem;">
+        <div class="premium-pack-item" data-gems="10" data-price="0.99" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.5rem 0.8rem; cursor: pointer; transition: background 0.2s;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; text-align: left;">
+            <span style="font-size: 1.3rem;">🔮</span>
+            <div>
+              <div style="font-size: 0.72rem; font-weight: 600; color: #fff;" class="lbl-pack-1-title">Sacchetto di Gemme</div>
+              <div style="font-size: 0.55rem; color: var(--text-muted);" class="lbl-pack-1-desc">Contiene 10 Gemme Primordiali</div>
+            </div>
+          </div>
+          <button class="btn-buy-pack" style="background: var(--special); border: none; color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer;">€ 0.99</button>
+        </div>
+
+        <div class="premium-pack-item" data-gems="50" data-price="3.99" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.5rem 0.8rem; cursor: pointer; transition: background 0.2s;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; text-align: left;">
+            <span style="font-size: 1.5rem;">🔮✨</span>
+            <div>
+              <div style="font-size: 0.72rem; font-weight: 600; color: #fff;" class="lbl-pack-2-title">Forziere di Gemme</div>
+              <div style="font-size: 0.55rem; color: var(--text-muted);" class="lbl-pack-2-desc">Contiene 50 Gemme Primordiali</div>
+            </div>
+          </div>
+          <button class="btn-buy-pack" style="background: var(--special); border: none; color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer;">€ 3.99</button>
+        </div>
+
+        <div class="premium-pack-item" data-gems="120" data-price="8.99" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.5rem 0.8rem; cursor: pointer; transition: background 0.2s;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; text-align: left;">
+            <span style="font-size: 1.7rem;">👑🔮</span>
+            <div>
+              <div style="font-size: 0.72rem; font-weight: 600; color: #fff;" class="lbl-pack-3-title">Tesoro degli Antenati</div>
+              <div style="font-size: 0.55rem; color: var(--text-muted);" class="lbl-pack-3-desc">Contiene 120 Gemme Primordiali</div>
+            </div>
+          </div>
+          <button class="btn-buy-pack" style="background: var(--special); border: none; color: #fff; font-size: 0.68rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer;">€ 8.99</button>
+        </div>
+      </div>
+      
+      <!-- Finta conversione in-game -->
+      <div style="border-top: 1px solid var(--gold-border); padding-top: 0.8rem; text-align: left;">
+        <h4 style="font-size: 0.65rem; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 0.4rem; text-transform: uppercase;" id="lbl-exchange-header">Scambio Ossidiana In-Game</h4>
+        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01); border: 1.5px dashed var(--gold-border); border-radius: 8px; padding: 0.5rem 0.8rem;">
+          <div style="font-size: 0.62rem; color: var(--text-muted); line-height: 1.4;" id="lbl-exchange-desc">
+            Converti <span style="color:#3182ce; font-weight:600;">100 Ossidiane in-game</span> per ottenere <span style="color:var(--special); font-weight:600;">10 Gemme Primordiali</span>
+          </div>
+          <button class="btn-reset-save" id="btn-convert-gems" style="height: auto; padding: 0.3rem 0.6rem; font-size: 0.58rem;">Converti 🔄</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP RECLUTAMENTO EROE (Elite Reward & Accampamento) -->
+  <div class="popup-overlay" id="popup-recruit" style="z-index: 110;">
+    <div class="popup-box merchant-box" style="width: 310px; padding: 1.5rem; border-color: #c8a76b;">
+      <h2 id="recruit-title">Accampamento Sardo ⛺</h2>
+      <div class="popup-icon" style="font-size: 2.4rem; margin: 0.4rem 0;" id="recruit-icon">⛺</div>
+      <p id="recruit-desc" style="font-size: 0.75rem; margin-bottom: 1rem;">Guerrieri sardi offrono i propri servigi.</p>
+      <div id="recruit-items" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem;"></div>
+      <button class="btn-popup-close" id="btn-recruit-close" style="background: var(--gold); color: #000;">Prosegui ➔</button>
     </div>
   </div>
 
